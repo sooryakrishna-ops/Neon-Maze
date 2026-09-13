@@ -1,0 +1,16 @@
+{
+  "sessions": [],
+  "rooms": [
+    {
+      "roomId": "room_mtzptu5b_n44ph",
+      "roomCode": "LXMJST",
+      "status": "WAITING",
+      "createdAt": 1789297996511,
+      "startTime": null,
+      "endTime": null,
+      "maxPlayers": 50,
+      "players": [],
+      "leaderboard": []
+    }
+  ]
+}

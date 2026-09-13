@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADMIN CONTROL — NEON MAZE COMPETITION</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --cc: #00f5ff;
+      --cp: #7b2fff;
+      --cg: #39ff14;
+      --cr: #ff2244;
+      --co: #ff8800;
+      --ck: #ffd700;
+      --cm: #ff00aa;
+      --bg: #070710;
+      --panel: rgba(12, 12, 30, 0.96);
+      --font-title: 'Press Start 2P', monospace;
+      --font-data: 'Share Tech Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: #fff;
+      font-family: var(--font-data);
+      min-height: 100vh;
+      padding: 24px;
+      user-select: none;
+      background-image:
+        radial-gradient(ellipse at 50% 10%, rgba(123, 47, 255, 0.15) 0, transparent 60%),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.25) 2px, rgba(0, 0, 0, 0.25) 4px);
+    }
+
+    .hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid rgba(123, 47, 255, 0.4);
+    }
+
+    .title-box h1 {
+      font-family: var(--font-title);
+      font-size: clamp(14px, 2.2vw, 24px);
+      color: var(--cc);
+      text-shadow: 0 0 14px var(--cc);
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+
+    .title-box .sub {
+      font-size: 13px;
+      color: var(--ck);
+      letter-spacing: 2px;
+    }
+
+    .top-ctrls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .badge-state {
+      font-family: var(--font-title);
+      font-size: 9px;
+      padding: 7px 12px;
+      border-radius: 4px;
+      border: 1.5px solid currentColor;
+      letter-spacing: 1px;
+      text-shadow: 0 0 8px currentColor;
+      display: inline-block;
+    }
+
+    .badge-state.WAITING {
+      color: var(--ck);
+      border-color: var(--ck);
+      background: rgba(255, 215, 0, 0.1);
+    }
+
+    .badge-state.READY {
+      color: var(--co);
+      border-color: var(--co);
+      background: rgba(255, 136, 0, 0.15);
+      animation: pulse 0.5s infinite alternate;
+    }
+
+    .badge-state.STARTED {
+      color: var(--cg);
+      border-color: var(--cg);
+      background: rgba(57, 255, 20, 0.1);
+    }
+
+    .badge-state.FINISHED {
+      color: var(--cm);
+      border-color: var(--cm);
+      background: rgba(255, 0, 170, 0.1);
+    }
+
+    .badge-state.CLOSED {
+      color: #888;
+      border-color: #888;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    @keyframes pulse {
+      from {
+        opacity: 0.6;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid rgba(0, 245, 255, 0.25);
+      border-radius: 6px;
+      padding: 14px 16px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 1px;
+    }
+
+    .stat-val {
+      font-family: var(--font-title);
+      font-size: 20px;
+      color: var(--cc);
+      text-shadow: 0 0 8px var(--cc);
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      background: var(--panel);
+      border: 2px solid var(--cp);
+      border-radius: 6px;
+      padding: 18px 22px;
+      align-items: center;
+      box-shadow: 0 0 25px rgba(123, 47, 255, 0.25);
+    }
+
+    .btn {
+      font-family: var(--font-title);
+      font-size: 10px;
+      padding: 12px 22px;
+      background: transparent;
+      color: var(--cc);
+      border: 2px solid var(--cc);
+      cursor: pointer;
+      letter-spacing: 2px;
+      border-radius: 4px;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--cc);
+      color: #000;
+      box-shadow: 0 0 20px var(--cc);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: #666 !important;
+      color: #888 !important;
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+
+    .btn.primary {
+      font-size: 11px;
+      padding: 13px 26px;
+      color: #000;
+      background: var(--cg);
+      border-color: var(--cg);
+      box-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
+    }
+
+    .btn.primary:hover:not(:disabled) {
+      background: #fff;
+      color: #000;
+      box-shadow: 0 0 28px var(--cg);
+    }
+
+    .btn.danger {
+      color: var(--cr);
+      border-color: var(--cr);
+    }
+
+    .btn.danger:hover:not(:disabled) {
+      background: var(--cr);
+      color: #fff;
+      box-shadow: 0 0 20px var(--cr);
+    }
+
+    .btn.warning {
+      color: var(--co);
+      border-color: var(--co);
+    }
+
+    .btn.warning:hover:not(:disabled) {
+      background: var(--co);
+      color: #000;
+      box-shadow: 0 0 20px var(--co);
+    }
+
+    .btn.gold {
+      color: var(--ck);
+      border-color: var(--ck);
+    }
+
+    .btn.gold:hover:not(:disabled) {
+      background: var(--ck);
+      color: #000;
+      box-shadow: 0 0 20px var(--ck);
+    }
+
+    .table-panel {
+      background: var(--panel);
+      border: 2px solid rgba(0, 245, 255, 0.25);
+      border-radius: 6px;
+      padding: 18px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
+    }
+
+    .panel-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .panel-hdr h2 {
+      font-family: var(--font-title);
+      font-size: 12px;
+      color: var(--cc);
+      letter-spacing: 2px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      font-family: var(--font-title);
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 1.5px;
+      padding: 12px 10px;
+      border-bottom: 2px solid rgba(0, 245, 255, 0.2);
+    }
+
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    tr:hover td {
+      background: rgba(0, 245, 255, 0.03);
+    }
+
+    .room-code-tag {
+      font-family: var(--font-title);
+      font-size: 14px;
+      color: var(--ck);
+      text-shadow: 0 0 8px var(--ck);
+      letter-spacing: 2px;
+    }
+
+    .pname {
+      font-weight: bold;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .pclass {
+      color: var(--ck);
+    }
+
+    .status-pill {
+      font-family: var(--font-title);
+      font-size: 8px;
+      padding: 4px 8px;
+      border-radius: 3px;
+      display: inline-block;
+      letter-spacing: 1px;
+    }
+
+    .status-WAITING {
+      background: rgba(255, 215, 0, 0.15);
+      color: var(--ck);
+    }
+
+    .status-READY {
+      background: rgba(255, 136, 0, 0.15);
+      color: var(--co);
+    }
+
+    .status-PLAYING {
+      background: rgba(0, 245, 255, 0.15);
+      color: var(--cc);
+    }
+
+    .status-CHECKPOINT {
+      background: rgba(255, 0, 170, 0.15);
+      color: var(--cm);
+    }
+
+    .status-FINISHED {
+      background: rgba(57, 255, 20, 0.2);
+      color: var(--cg);
+      border: 1px solid var(--cg);
+    }
+
+    .status-DNF {
+      background: rgba(255, 34, 68, 0.15);
+      color: var(--cr);
+    }
+
+    .status-DISCONNECTED {
+      background: rgba(255, 255, 255, 0.1);
+      color: #888;
+    }
+
+    .time-val {
+      font-family: var(--font-data);
+      font-weight: bold;
+      color: var(--cg);
+      font-size: 14px;
+    }
+
+    .time-empty {
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-small {
+      background: transparent;
+      border: 1px solid currentColor;
+      padding: 5px 10px;
+      font-size: 10px;
+      cursor: pointer;
+      border-radius: 3px;
+      font-family: var(--font-title);
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+
+    .btn-small:hover {
+      background: currentColor;
+      color: #000;
+    }
+
+    .btn-small.red {
+      color: var(--cr);
+    }
+
+    .btn-small.cyan {
+      color: var(--cc);
+    }
+
+    /* Room Detail Header Banner */
+    .room-banner {
+      background: var(--panel);
+      border: 2px solid var(--ck);
+      box-shadow: 0 0 35px rgba(255, 215, 0, 0.25);
+      border-radius: 6px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .room-code-display {
+      font-family: var(--font-title);
+      font-size: clamp(20px, 3.5vw, 36px);
+      color: var(--ck);
+      text-shadow: 0 0 16px var(--ck);
+      letter-spacing: 4px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Modal for Admin Auth */
+    #loginModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.94);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(8px);
+    }
+
+    .login-box {
+      background: var(--panel);
+      border: 2px solid var(--cp);
+      box-shadow: 0 0 50px rgba(123, 47, 255, 0.5);
+      padding: 32px 36px;
+      width: min(440px, 92%);
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .login-box h2 {
+      font-family: var(--font-title);
+      font-size: 13px;
+      color: var(--cc);
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+    }
+
+    .login-box p {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 20px;
+    }
+
+    .input-pass {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid var(--cp);
+      color: #fff;
+      font-family: var(--font-data);
+      font-size: 16px;
+      letter-spacing: 4px;
+      border-radius: 4px;
+      outline: none;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+
+    .input-pass:focus {
+      border-color: var(--cc);
+      box-shadow: 0 0 12px var(--cc);
+    }
+
+    .login-err {
+      color: var(--cr);
+      font-size: 11px;
+      margin-top: 12px;
+      display: none;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Login Modal -->
+  <div id="loginModal">
+    <div class="login-box">
+      <h2>⚡ ADMIN ACCESS</h2>
+      <p>Enter Association Day admin master passkey:</p>
+      <input type="password" id="passInput" class="input-pass" placeholder="PASSWORD" autofocus autocomplete="off">
+      <div>
+        <button class="btn primary" id="btnLogin" style="width:100%">AUTHENTICATE</button>
+      </div>
+      <div id="loginErr" class="login-err"></div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="hdr">
+    <div class="title-box">
+      <h1>NEON MAZE · ADMIN DASHBOARD</h1>
+      <div class="sub">ROOM-BASED MULTIPLAYER COMPETITION SYSTEM</div>
+    </div>
+    <div class="top-ctrls">
+      <div id="liveClock" style="color:var(--cc);font-size:14px;margin-right:8px">--:--:--</div>
+      <a href="/" target="_blank" class="btn" style="font-size:9px;padding:8px 14px">OPEN PLAYER GAME ↗</a>
+    </div>
+  </header>
+
+  <!-- VIEW 1: ROOMS LIST DASHBOARD -->
+  <div id="viewRoomsList">
+    <!-- Stats Bar -->
+    <section class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-label">ACTIVE ROOMS</div>
+        <div class="stat-val" id="stActiveRooms">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">WAITING TO START</div>
+        <div class="stat-val" id="stWaitingRooms" style="color:var(--ck)">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">RUNNING COMPETITIONS</div>
+        <div class="stat-val" id="stStartedRooms" style="color:var(--cg)">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">FINISHED ROOMS</div>
+        <div class="stat-val" id="stFinishedRooms" style="color:var(--cm)">0</div>
+      </div>
+    </section>
+
+    <!-- Action Bar -->
+    <section class="action-bar">
+      <button id="btnCreateRoom" class="btn primary">＋ CREATE NEW ROOM</button>
+      <button id="btnRefreshRooms" class="btn">↻ REFRESH</button>
+    </section>
+
+    <!-- Active Rooms Table -->
+    <section class="table-panel">
+      <div class="panel-hdr">
+        <h2>ACTIVE COMPETITION ROOMS</h2>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ROOM CODE</th>
+            <th>STATUS</th>
+            <th>PLAYERS</th>
+            <th>CREATED AT</th>
+            <th style="text-align:right">ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="roomsTableBody">
+          <tr>
+            <td colspan="5" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">No rooms created yet.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Room History Table Panel -->
+    <section class="table-panel">
+      <div class="panel-hdr">
+        <h2>ROOM HISTORY</h2>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ROOM CODE</th>
+            <th>STATUS</th>
+            <th>PLAYERS</th>
+            <th>COMPLETED AT</th>
+            <th style="text-align:right">WINNER</th>
+          </tr>
+        </thead>
+        <tbody id="historyTableBody">
+          <tr>
+            <td colspan="5" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">No completed
+              competitions.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- VIEW 2: SINGLE ROOM MANAGEMENT DASHBOARD -->
+  <div id="viewRoomDetail" style="display:none">
+    <!-- Back Button & Banner -->
+    <div style="margin-bottom:14px">
+      <button class="btn" id="btnBackToRooms" style="font-size:9px;padding:8px 14px">← BACK TO ALL ROOMS</button>
+    </div>
+
+    <section class="room-banner">
+      <div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:2px;margin-bottom:4px">COMPETITION ROOM
+          CODE</div>
+        <div class="room-code-display">
+          <span id="bannerRoomCode">—</span>
+          <button class="btn gold" id="btnCopyCode" style="font-size:9px;padding:8px 14px">📋 COPY ROOM CODE</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div id="bannerRoomStatus" class="badge-state WAITING">WAITING</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.7)">
+          PLAYERS: <strong id="bannerPlayerCount" style="color:var(--cc)">0</strong> / 50
+        </div>
+      </div>
+    </section>
+
+    <!-- Room Controls Bar -->
+    <section class="action-bar">
+      <button id="btnStartRoom" class="btn primary">▶ START COMPETITION</button>
+      <button id="btnEndRoom" class="btn danger">⏹ END COMPETITION</button>
+      <div id="roomCtrlMsg" style="font-size:12px;color:var(--co);letter-spacing:1px;margin-left:auto"></div>
+    </section>
+
+    <!-- Live Participants Table in Room -->
+    <section class="table-panel">
+      <div class="panel-hdr">
+        <h2>ROOM PARTICIPANTS & LIVE LEADERBOARD</h2>
+        <button id="btnRefreshRoomDetail" class="btn-small cyan">REFRESH</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:60px">RANK</th>
+            <th>NAME</th>
+            <th>CLASS</th>
+            <th>STATUS</th>
+            <th>CHECKPOINTS</th>
+            <th>ATTEMPTS</th>
+            <th>OFFICIAL TIME</th>
+            <th>SCORE</th>
+            <th style="text-align:right">ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="roomPlayersBody">
+          <tr>
+            <td colspan="9" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">Waiting for
+              participants...</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    'use strict';
+
+    // Resolve backend API URL safely (handles http://localhost:3000, 127.0.0.1, or file://)
+    const API_BASE = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
+      ? window.location.origin
+      : 'http://localhost:3000';
+
+    let adminToken = sessionStorage.getItem('neon_admin_token') || null;
+    let currentViewingRoomCode = null;
+    let ws = null;
+
+    // Clock
+    setInterval(() => {
+      document.getElementById('liveClock').textContent = new Date().toLocaleTimeString();
+    }, 1000);
+
+    // UI Elements
+    const loginModal = document.getElementById('loginModal');
+    const passInput = document.getElementById('passInput');
+    const btnLogin = document.getElementById('btnLogin');
+    const loginErr = document.getElementById('loginErr');
+    const viewRoomsList = document.getElementById('viewRoomsList');
+    const viewRoomDetail = document.getElementById('viewRoomDetail');
+    const btnCreateRoom = document.getElementById('btnCreateRoom');
+    const btnRefreshRooms = document.getElementById('btnRefreshRooms');
+    const btnBackToRooms = document.getElementById('btnBackToRooms');
+    const btnCopyCode = document.getElementById('btnCopyCode');
+    const btnStartRoom = document.getElementById('btnStartRoom');
+    const btnEndRoom = document.getElementById('btnEndRoom');
+    const roomCtrlMsg = document.getElementById('roomCtrlMsg');
+
+    /* ══════════════════════════════════════════════
+       1. AUTHENTICATE BUTTON (REST + VISUAL STATES)
+    ══════════════════════════════════════════════ */
+    async function performAuth() {
+      const pass = passInput.value.trim();
+      loginErr.style.display = 'none';
+
+      if (!pass) {
+        loginErr.textContent = 'PLEASE ENTER PASSWORD';
+        loginErr.style.display = 'block';
+        passInput.focus();
+        return;
+      }
+
+      // Visual Loading State
+      btnLogin.disabled = true;
+      btnLogin.textContent = 'AUTHENTICATING...';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pass })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          btnLogin.textContent = 'SUCCESS!';
+          adminToken = data.adminToken;
+          sessionStorage.setItem('neon_admin_token', adminToken);
+
+          setTimeout(() => {
+            loginModal.style.display = 'none';
+            initWebSocket();
+            loadRoomsList();
+          }, 400);
+        } else {
+          btnLogin.disabled = false;
+          btnLogin.textContent = 'AUTHENTICATE';
+          loginErr.textContent = data.error || 'INVALID CREDENTIALS';
+          loginErr.style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Auth request error:', err);
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'AUTHENTICATE';
+        loginErr.textContent = 'SERVER CONNECTION FAILED — ENSURE SERVER IS RUNNING';
+        loginErr.style.display = 'block';
+      }
+    }
+
+    btnLogin.onclick = performAuth;
+    passInput.addEventListener('keydown', e => { if (e.key === 'Enter') performAuth(); });
+
+    // Auto-login check
+    if (adminToken) {
+      loginModal.style.display = 'none';
+      initWebSocket();
+      loadRoomsList();
+    }
+
+    /* ══════════════════════════════════════════════
+       2. WEBSOCKET REAL-TIME SYNC
+    ══════════════════════════════════════════════ */
+    function initWebSocket() {
+      const wsUrl = API_BASE.replace(/^http/, 'ws');
+      try {
+        ws = new WebSocket(wsUrl);
+        ws.onopen = () => {
+          ws.send(JSON.stringify({ type: 'ADMIN_SUBSCRIBE', token: adminToken }));
+        };
+        ws.onmessage = (e) => {
+          try {
+            const msg = JSON.parse(e.data);
+            handleWSMessage(msg);
+          } catch (err) {
+            console.error('WS parse error', err);
+          }
+        };
+        ws.onclose = () => {
+          setTimeout(initWebSocket, 2500);
+        };
+      } catch (err) {
+        console.warn('WS connection setup failed:', err);
+      }
+    }
+
+    function handleWSMessage(msg) {
+      // If current room received an update
+      if (currentViewingRoomCode && msg.roomCode === currentViewingRoomCode) {
+        if (msg.type === 'ROOM_LEADERBOARD_UPDATE' || msg.type === 'ROOM_PLAYER_FINISHED') {
+          if (msg.summary) updateRoomBanner(msg.summary);
+          if (msg.leaderboard) renderRoomPlayers(msg.leaderboard);
+        }
+        if (msg.type === 'ROOM_START_COUNTDOWN') {
+          updateRoomStatus('READY');
+        }
+        if (msg.type === 'ROOM_COMPETITION_STARTED') {
+          updateRoomStatus('STARTED');
+        }
+        if (msg.type === 'ROOM_COMPLETED') {
+          updateRoomStatus('FINISHED');
+        }
+      }
+      // If we are on the rooms list, refresh list occasionally
+      if (!currentViewingRoomCode && (msg.type === 'ROOM_LEADERBOARD_UPDATE' || msg.type === 'ROOM_COMPLETED')) {
+        loadRoomsList();
+      }
+    }
+
+    /* ══════════════════════════════════════════════
+       3. ROOMS LIST & CREATION
+    ══════════════════════════════════════════════ */
+    async function loadRoomsList() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/rooms`);
+        const data = await res.json();
+        if (res.ok && data.success) {
+          renderRoomsTable(data.rooms || []);
+          updateRoomsStats(data.rooms || []);
+        }
+      } catch (e) {
+        console.error('Failed to load rooms list:', e);
+      }
+    }
+
+    function updateRoomsStats(rooms) {
+      document.getElementById('stActiveRooms').textContent = rooms.length;
+      document.getElementById('stWaitingRooms').textContent = rooms.filter(r => r.status === 'WAITING' || r.status === 'READY').length;
+      document.getElementById('stStartedRooms').textContent = rooms.filter(r => r.status === 'STARTED').length;
+      document.getElementById('stFinishedRooms').textContent = rooms.filter(r => r.status === 'FINISHED').length;
+    }
+
+    function renderRoomsTable(rooms) {
+      const tbody = document.getElementById('roomsTableBody');
+      if (!rooms || rooms.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">No competition rooms created yet. Click "＋ CREATE NEW ROOM" above.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rooms.map(r => {
+        const dateStr = new Date(r.createdAt).toLocaleTimeString();
+        return `
+      <tr>
+        <td><strong class="room-code-tag">${r.roomCode}</strong></td>
+        <td><span class="badge-state ${r.status}">${r.status}</span></td>
+        <td><strong style="color:var(--cc)">${r.totalPlayers}</strong> / ${r.maxPlayers || 50}</td>
+        <td style="color:rgba(255,255,255,0.6)">${dateStr}</td>
+        <td style="text-align:right">
+          <button class="btn-small cyan" onclick="openRoomDetail('${r.roomCode}')">MANAGE ROOM ↗</button>
+        </td>
+      </tr>
+    `;
+      }).join('');
+    }
+
+    // Create New Room Button (with loading feedback)
+    btnCreateRoom.onclick = async () => {
+      btnCreateRoom.disabled = true;
+      btnCreateRoom.textContent = 'CREATING ROOM...';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/rooms/create`, { method: 'POST' });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          btnCreateRoom.textContent = 'ROOM CREATED!';
+          setTimeout(() => {
+            btnCreateRoom.disabled = false;
+            btnCreateRoom.textContent = '＋ CREATE NEW ROOM';
+            openRoomDetail(data.room.roomCode);
+          }, 500);
+        } else {
+          alert('Failed to create room: ' + (data.error || 'Unknown error'));
+          btnCreateRoom.disabled = false;
+          btnCreateRoom.textContent = '＋ CREATE NEW ROOM';
+        }
+      } catch (err) {
+        console.error('Create room error:', err);
+        alert('Server error creating room');
+        btnCreateRoom.disabled = false;
+        btnCreateRoom.textContent = '＋ CREATE NEW ROOM';
+      }
+    };
+
+    btnRefreshRooms.onclick = loadRoomsList;
+
+    /* ══════════════════════════════════════════════
+       4. ROOM MANAGEMENT DASHBOARD
+    ══════════════════════════════════════════════ */
+    window.openRoomDetail = async (code) => {
+      currentViewingRoomCode = code;
+      viewRoomsList.style.display = 'none';
+      viewRoomDetail.style.display = 'block';
+
+      document.getElementById('bannerRoomCode').textContent = code;
+      roomCtrlMsg.textContent = '';
+
+      await loadRoomDetails(code);
+    };
+
+    btnBackToRooms.onclick = () => {
+      currentViewingRoomCode = null;
+      viewRoomDetail.style.display = 'none';
+      viewRoomsList.style.display = 'block';
+      loadRoomsList();
+    };
+
+    btnCopyCode.onclick = () => {
+      const code = document.getElementById('bannerRoomCode').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        btnCopyCode.textContent = '✔ COPIED!';
+        setTimeout(() => { btnCopyCode.textContent = '📋 COPY ROOM CODE'; }, 1500);
+      });
+    };
+
+    async function loadRoomDetails(code) {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/rooms/${code}`);
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          updateRoomBanner(data.room);
+          renderRoomPlayers(data.leaderboard || data.players || []);
+        } else {
+          alert('Error loading room: ' + (data.error || 'Room not found'));
+          btnBackToRooms.click();
+        }
+      } catch (e) {
+        console.error('Failed to load room details:', e);
+      }
+    }
+
+    function updateRoomBanner(room) {
+      document.getElementById('bannerPlayerCount').textContent = room.totalPlayers || 0;
+      updateRoomStatus(room.status);
+
+      // Configure controls based on room status
+      if (room.status === 'STARTED') {
+        btnStartRoom.disabled = true;
+        btnStartRoom.textContent = 'RUNNING';
+        btnEndRoom.disabled = false;
+      } else if (room.status === 'FINISHED' || room.status === 'CLOSED') {
+        btnStartRoom.disabled = true;
+        btnStartRoom.textContent = 'COMPLETED';
+        btnEndRoom.disabled = true;
+      } else {
+        // WAITING or READY
+        btnStartRoom.disabled = (room.totalPlayers === 0);
+        btnStartRoom.textContent = '▶ START COMPETITION';
+        btnEndRoom.disabled = true;
+        if (room.totalPlayers === 0) {
+          roomCtrlMsg.textContent = 'Waiting for players to join with room code...';
+        } else {
+          roomCtrlMsg.textContent = `${room.totalPlayers} player(s) ready to start!`;
+        }
+      }
+    }
+
+    function updateRoomStatus(st) {
+      const b = document.getElementById('bannerRoomStatus');
+      b.className = `badge-state ${st}`;
+      b.textContent = st;
+    }
+
+    function renderRoomPlayers(players) {
+      const tbody = document.getElementById('roomPlayersBody');
+      if (!players || players.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">Waiting for participants...</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = players.map((p, idx) => {
+        let rankBadge = `<span style="font-family:var(--font-title);font-size:9px;color:var(--ck)">#${p.rank || idx + 1}</span>`;
+        if (p.rank === 1 && p.status === 'FINISHED') rankBadge = `<strong style="color:var(--ck)">🏆 #1</strong>`;
+        else if (p.rank === 2 && p.status === 'FINISHED') rankBadge = `<strong style="color:var(--cc)">🥈 #2</strong>`;
+        else if (p.rank === 3 && p.status === 'FINISHED') rankBadge = `<strong style="color:#c499ff">🥉 #3</strong>`;
+
+        const statusPill = `<span class="status-pill status-${p.status}">${p.status}</span>`;
+        const duration = p.status === 'FINISHED'
+          ? `<span class="time-val">${p.durationStr || '--'}</span>`
+          : `<span class="time-empty">--</span>`;
+
+        return `
+      <tr>
+        <td>${rankBadge}</td>
+        <td>
+          <div class="pname">${escapeHtml(p.name)}</div>
+          <div style="font-size:10px;color:${p.connected ? '#39ff14' : '#888'}">${p.connected ? '● CONNECTED' : '○ DISCONNECTED'}</div>
+        </td>
+        <td><span class="pclass">${escapeHtml(p.class)}</span></td>
+        <td>${statusPill}</td>
+        <td>${p.currentCp || 0} / 5</td>
+        <td>${p.attempts || 1}</td>
+        <td>${duration}</td>
+        <td>${p.score || 0}</td>
+        <td style="text-align:right">
+          <button class="btn-small red" onclick="kickPlayerFromRoom('${p.id}')">KICK</button>
+        </td>
+      </tr>
+    `;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    window.kickPlayerFromRoom = async (playerId) => {
+      if (!confirm('Kick this player from this competition room?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/rooms/${currentViewingRoomCode}/kick`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ playerId })
+        });
+        const d = await res.json();
+        if (res.ok && d.success) {
+          loadRoomDetails(currentViewingRoomCode);
+        } else {
+          alert(d.error || 'Failed to kick player');
+        }
+      } catch (e) {
+        console.error('Kick error', e);
+      }
+    };
+
+    // Start Competition for this Room Button
+    btnStartRoom.onclick = async () => {
+      if (!currentViewingRoomCode) return;
+      if (!confirm(`Start synchronized competition now for all participants in ROOM ${currentViewingRoomCode}?`)) return;
+
+      btnStartRoom.disabled = true;
+      btnStartRoom.textContent = 'STARTING...';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/rooms/${currentViewingRoomCode}/start`, { method: 'POST' });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          btnStartRoom.textContent = 'COUNTDOWN STARTED!';
+          updateRoomStatus('READY');
+          setTimeout(() => {
+            btnStartRoom.textContent = 'RUNNING';
+            updateRoomStatus('STARTED');
+            loadRoomDetails(currentViewingRoomCode);
+          }, 3800);
+        } else {
+          alert('Cannot start room: ' + (data.error || 'Unknown error'));
+          btnStartRoom.disabled = false;
+          btnStartRoom.textContent = '▶ START COMPETITION';
+        }
+      } catch (e) {
+        console.error('Start room error:', e);
+        alert('Server error starting competition');
+        btnStartRoom.disabled = false;
+        btnStartRoom.textContent = '▶ START COMPETITION';
+      }
+    };
+
+    // End Competition for this Room Button
+    btnEndRoom.onclick = async () => {
+      if (!currentViewingRoomCode) return;
+      if (!confirm(`End competition and finalize leaderboard for ROOM ${currentViewingRoomCode}?`)) return;
+
+      btnEndRoom.disabled = true;
+      btnEndRoom.textContent = 'ENDING...';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/rooms/${currentViewingRoomCode}/end`, { method: 'POST' });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          btnEndRoom.textContent = 'ENDED';
+          updateRoomStatus('FINISHED');
+          loadRoomDetails(currentViewingRoomCode);
+        } else {
+          alert('Error ending room: ' + (data.error || 'Unknown error'));
+          btnEndRoom.disabled = false;
+          btnEndRoom.textContent = '⏹ END COMPETITION';
+        }
+      } catch (e) {
+        console.error('End room error:', e);
+        btnEndRoom.disabled = false;
+        btnEndRoom.textContent = '⏹ END COMPETITION';
+      }
+    };
+
+    document.getElementById('btnRefreshRoomDetail').onclick = () => {
+      if (currentViewingRoomCode) loadRoomDetails(currentViewingRoomCode);
+    };
+  </script>
+</body>
+
+</html>

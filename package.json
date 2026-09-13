@@ -1,0 +1,13 @@
+{
+  "name": "neon-maze-competition",
+  "version": "1.0.0",
+  "description": "Synchronized multiplayer arcade maze competition for Association Day",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  }
+}
