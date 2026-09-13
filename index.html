@@ -569,11 +569,11 @@ const API_BASE = (window.location.protocol === 'http:' || window.location.protoc
 ══════════════════════════════════════════════ */
 const CHECKPOINT_CONFIG = {
   levels: [
-    { cp: 1, targetFallSpeed: 110, targetGravity: 85,  spawnInterval: 1.8, maxSimultaneousTargets: 2, bombChance: 0.10, vxRange: 35 },
-    { cp: 2, targetFallSpeed: 135, targetGravity: 100, spawnInterval: 1.5, maxSimultaneousTargets: 3, bombChance: 0.14, vxRange: 45 },
-    { cp: 3, targetFallSpeed: 165, targetGravity: 120, spawnInterval: 1.25, maxSimultaneousTargets: 3, bombChance: 0.18, vxRange: 60 },
-    { cp: 4, targetFallSpeed: 195, targetGravity: 145, spawnInterval: 1.05, maxSimultaneousTargets: 4, bombChance: 0.24, vxRange: 75 },
-    { cp: 5, targetFallSpeed: 230, targetGravity: 170, spawnInterval: 0.90, maxSimultaneousTargets: 4, bombChance: 0.28, vxRange: 85 },
+    { cp: 1, targetFallSpeed: 125, targetGravity: 95,  spawnInterval: 0.95, maxSimultaneousTargets: 2, bombChance: 0.12, vxRange: 35 },
+    { cp: 2, targetFallSpeed: 150, targetGravity: 115, spawnInterval: 0.80, maxSimultaneousTargets: 3, bombChance: 0.16, vxRange: 45 },
+    { cp: 3, targetFallSpeed: 175, targetGravity: 135, spawnInterval: 0.68, maxSimultaneousTargets: 4, bombChance: 0.22, vxRange: 60 },
+    { cp: 4, targetFallSpeed: 205, targetGravity: 155, spawnInterval: 0.58, maxSimultaneousTargets: 5, bombChance: 0.28, vxRange: 75 },
+    { cp: 5, targetFallSpeed: 235, targetGravity: 180, spawnInterval: 0.50, maxSimultaneousTargets: 6, bombChance: 0.32, vxRange: 90 },
   ],
   targetWidth: 56,
   targetHeight: 56,
@@ -748,6 +748,8 @@ let G={
   bumpCd:0,
   trail:[],
   camX:0,camY:0,
+  // Dynamic room maze received from server
+  roomMaze: null,
   // Server-authoritative room clock
   serverTimeOffset:0,
   roomStartTime:null,
@@ -764,9 +766,12 @@ let G={
   playerToken: null,
   playerName: '',
   playerClass: '',
+  playerColor: '#00f5ff',
   roomCode: '',
   retries: 0,
   accOk: 0, accTot: 0,
+  // Multiplayer ghost competitors in same room
+  remotePlayers: new Map(), // playerId -> { id, name, color, status, x, y, targetX, targetY, direction, sliding }
   // FX
   shakeX:0,shakeY:0,shakeI:0,shakeT:0,
   flashA:0,flashC:'#fff',
@@ -899,6 +904,28 @@ function updHUD(){
 }
 
 function setupMaze(){
+  if (G.roomMaze && G.roomMaze.grid) {
+    const rm = G.roomMaze;
+    CFG.MC = rm.width || rm.grid[0].length;
+    CFG.MR = rm.height || rm.grid.length;
+    G.maze = rm.grid.map(row => (typeof row === 'string' ? row.split('').map(Number) : Array.from(row).map(Number)));
+    G.exit = { c: rm.exit.c, r: rm.exit.r };
+    G.cps = (rm.checkpoints || []).map((cp, idx) => ({
+      id: cp.id || (idx + 1),
+      c: cp.c,
+      r: cp.r,
+      done: false
+    }));
+    G.spks = (rm.spikes || []).map((sp, i) => ({
+      c: sp.c,
+      r: sp.r,
+      phase: 'safe',
+      timer: i * CFG.SSTAG,
+      prog: 0
+    }));
+    return;
+  }
+
   const rng=mkRng(CFG.SEED);
   const{MC:C,MR:R}=CFG;
   G.maze=genMaze(C,R,rng);
@@ -916,7 +943,7 @@ function setupMaze(){
   ];
   G.cps=[];
   const occ=[[1,1],[ec,er]];
-  for(const[tc,tr]of tgts){const pos=nearFloor(G.maze,tc,tr,occ);if(pos){G.cps.push({c:pos[0],r:pos[1],done:false});occ.push(pos)}}
+  for(const[tc,tr]of tgts){const pos=nearFloor(G.maze,tc,tr,occ);if(pos){G.cps.push({id:G.cps.length+1,c:pos[0],r:pos[1],done:false});occ.push(pos)}}
 
   const cands=[];
   for(let r=1;r<R-1;r++)for(let c=1;c<C-1;c++){
@@ -1003,7 +1030,21 @@ function onCellEvent(c,r){
   if(sp){onSpikeHit();return}
 
   const cpI=G.cps.findIndex(cp=>cp.c===c&&cp.r===r&&!cp.done);
-  if(cpI!==-1){G.plr.sliding=false;enterCP(cpI);return}
+  if(cpI!==-1){
+    // Requirement 4: Checkpoint sequence MUST be enforced
+    // Check if any prior checkpoints are not yet completed
+    const priorIncompleteIdx = G.cps.slice(0, cpI).findIndex(cp => !cp.done);
+    if(priorIncompleteIdx !== -1){
+      G.plr.sliding = false;
+      notif(`🔒 CHECKPOINT ${cpI + 1} LOCKED! COMPLETE CHECKPOINT ${priorIncompleteIdx + 1} FIRST!`, 'r', 2500);
+      Aud.play('bump');
+      return;
+    }
+
+    G.plr.sliding=false;
+    enterCP(cpI);
+    return;
+  }
 
   if(c===G.exit.c&&r===G.exit.r){
     if(G.cps.every(cp=>cp.done)){
@@ -1127,7 +1168,7 @@ function enterCP(idx){
   G.state='CHECKPOINT';G.cpIdx=idx;
   G.mgLives=CFG.LIVES;G.mgScore=0;G.mgLetters=[];
   const cpCfg=CHECKPOINT_CONFIG.levels[idx]||CHECKPOINT_CONFIG.levels[0];
-  G.mgSpawnT=Math.max(0, cpCfg.spawnInterval - 0.4);
+  G.mgSpawnT=0;
   G.mgDone=false;
   G.wrongKeyMistakes=0;
   G.targetScale=1.0;
@@ -1147,6 +1188,12 @@ function enterCP(idx){
   document.getElementById('cpo').classList.add('on');
 
   sendWS({ type: 'CHECKPOINT_ENTER', cpIndex: idx });
+
+  // Spawn initial targets so multiple targets fall simultaneously from the start
+  spawnLetter();
+  if (cpCfg.maxSimultaneousTargets >= 2) {
+    setTimeout(() => { if (G.state === 'CHECKPOINT' && !G.mgDone) spawnLetter(); }, 180);
+  }
 }
 
 function updMgLives(){
@@ -1173,14 +1220,14 @@ function spawnLetter(){
   const active=G.mgLetters.filter(l=>!l.dead&&!l.missed);
   if(active.length>=cpCfg.maxSimultaneousTargets)return;
 
-  const used=new Set(G.mgLetters.filter(l=>!l.dead).map(l=>l.ch));
-  const avail=ALPHA.filter(c=>!used.has(c));
-  if(!avail.length)return;
+  const used=new Set(active.map(l=>l.ch));
+  let avail=ALPHA.filter(c=>!used.has(c));
+  if(!avail.length) avail = ALPHA;
 
   const ch=avail[0|Math.random()*avail.length];
   const isBomb=Math.random()<cpCfg.bombChance;
   const area=document.getElementById('mgarea');
-  const aw=area.clientWidth||area.offsetWidth;
+  const aw=area.clientWidth||area.offsetWidth||400;
 
   const minX=CHECKPOINT_CONFIG.leftMargin;
   const maxX=Math.max(minX, aw - CHECKPOINT_CONFIG.targetWidth - CHECKPOINT_CONFIG.rightMargin);
@@ -1214,8 +1261,8 @@ function updMgLetters(dt){
   if(G.mgDone)return;
   const area=document.getElementById('mgarea');
   if(!area)return;
-  const aw=area.clientWidth||area.offsetWidth;
-  const ah=area.clientHeight||area.offsetHeight;
+  const aw=area.clientWidth||area.offsetWidth||400;
+  const ah=area.clientHeight||area.offsetHeight||340;
   const missThreshold=ah - CHECKPOINT_CONFIG.targetHeight;
 
   for(let i=G.mgLetters.length-1;i>=0;i--){
@@ -1227,7 +1274,7 @@ function updMgLetters(dt){
     l.y+=l.vy*dt;
 
     const minX=CHECKPOINT_CONFIG.leftMargin;
-    const maxX=aw - CHECKPOINT_CONFIG.targetWidth - CHECKPOINT_CONFIG.rightMargin;
+    const maxX=Math.max(minX, aw - CHECKPOINT_CONFIG.targetWidth - CHECKPOINT_CONFIG.rightMargin);
     if(l.x<minX){l.x=minX;l.vx=Math.abs(l.vx)*.8}
     if(l.x>maxX){l.x=maxX;l.vx=-Math.abs(l.vx)*.8}
 
@@ -1249,7 +1296,8 @@ function updMgLetters(dt){
 
   const cpCfg=CHECKPOINT_CONFIG.levels[G.cpIdx]||CHECKPOINT_CONFIG.levels[0];
   G.mgSpawnT+=dt;
-  if(G.mgSpawnT>=cpCfg.spawnInterval){
+  const activeCount=G.mgLetters.filter(l=>!l.dead&&!l.missed).length;
+  if(activeCount<cpCfg.maxSimultaneousTargets && G.mgSpawnT>=cpCfg.spawnInterval){
     G.mgSpawnT=0;
     spawnLetter();
   }
@@ -1261,13 +1309,23 @@ function handleMgKey(e){
   if(k.length!==1||!/[A-Z]/.test(k))return;
 
   G.accTot++;
-  const safe=G.mgLetters.find(l=>!l.isBomb&&l.ch===k&&!l.dead&&!l.missed);
-  const bomb=G.mgLetters.find(l=>l.isBomb&&l.ch===k&&!l.dead&&!l.missed);
 
-  if(safe){
-    popLetter(safe,true);
-  }else if(bomb){
-    popLetter(bomb,false);
+  // Requirement 19: Handle multiple matching letters deterministically
+  // 1. Prioritize a visible/active normal target
+  // 2. If multiple normal targets exist, hit the lowest/closest target (largest y)
+  // 3. Only trigger the bomb if no valid normal target is available
+  const matchingSafe = G.mgLetters
+    .filter(l => !l.isBomb && l.ch === k && !l.dead && !l.missed)
+    .sort((a, b) => b.y - a.y);
+
+  const matchingBombs = G.mgLetters
+    .filter(l => l.isBomb && l.ch === k && !l.dead && !l.missed)
+    .sort((a, b) => b.y - a.y);
+
+  if(matchingSafe.length > 0){
+    popLetter(matchingSafe[0], true);
+  }else if(matchingBombs.length > 0){
+    popLetter(matchingBombs[0], false);
     loseLife('💣 BOMB PRESSED!');
   }else{
     applyWrongKeyPenalty();
@@ -1464,13 +1522,20 @@ function render(){
 
   Ptcl.draw(ctx,cx,cy);
 
+  // Local player trail with assigned player color
+  const pCol = G.playerColor || CFG.CLR.player;
   for(let i=0;i<G.trail.length;i++){
     const p=G.trail[i],a=(i/G.trail.length)*.5,r2=8*(i/G.trail.length);
-    ctx.globalAlpha=a;ctx.shadowColor=CFG.CLR.player;ctx.shadowBlur=6;
-    ctx.fillStyle=CFG.CLR.player;
+    ctx.globalAlpha=a;ctx.shadowColor=pCol;ctx.shadowBlur=6;
+    ctx.fillStyle=pCol;
     ctx.beginPath();ctx.arc(p.x-cx,p.y-cy,Math.max(1,r2),0,Math.PI*2);ctx.fill();
   }
   ctx.globalAlpha=1;ctx.shadowBlur=0;
+
+  // Remote players (Multiplayer translucent ghost competitors in same room)
+  for(const rp of G.remotePlayers.values()){
+    drawRemotePlayer(ctx, rp.x-cx, rp.y-cy, t, rp);
+  }
 
   const pos=plrPx();
   drawPlayer(ctx,pos.x-cx,pos.y-cy,t,G.playerScale);
@@ -1500,23 +1565,78 @@ function drawPlayer(ctx,sx,sy,t,scale=1.0){
   const p=G.plr;
   const bofs=p.bumpT>0?Math.sin(p.bumpT*Math.PI)*4:0;
   const bx=sx+(p.bumpDx||0)*bofs,by=sy+(p.bumpDy||0)*bofs;
+  const col = G.playerColor || CFG.CLR.player;
 
   ctx.save();
-  ctx.shadowColor=CFG.CLR.player;ctx.shadowBlur=28*scale;
-  ctx.strokeStyle=CFG.CLR.player;ctx.globalAlpha=.5;ctx.lineWidth=1.5;
+  ctx.shadowColor=col;ctx.shadowBlur=28*scale;
+  ctx.strokeStyle=col;ctx.globalAlpha=.5;ctx.lineWidth=1.5;
   ctx.beginPath();ctx.arc(bx,by,r+pu+3*scale,0,Math.PI*2);ctx.stroke();
 
   ctx.globalAlpha=1;ctx.shadowBlur=20*scale;
-  ctx.fillStyle=CFG.CLR.player;
+  ctx.fillStyle=col;
   ctx.beginPath();ctx.arc(bx,by,r,0,Math.PI*2);ctx.fill();
 
   ctx.shadowBlur=0;ctx.fillStyle='#ffffff';
   ctx.beginPath();ctx.arc(bx-r*.2,by-r*.2,r*.32,0,Math.PI*2);ctx.fill();
 
   if(p.sliding){
-    ctx.fillStyle=CFG.CLR.player;ctx.globalAlpha=.6;
+    ctx.fillStyle=col;ctx.globalAlpha=.6;
     ctx.beginPath();ctx.arc(bx+p.dc*r*.5,by+p.dr*r*.5,Math.max(1.5, 3*scale),0,Math.PI*2);ctx.fill();
   }
+  ctx.restore();
+}
+
+function drawRemotePlayer(ctx,sx,sy,t,rp){
+  // Translucent ghost competitor (20-35% opacity, non-colliding)
+  const isFinished = rp.status === 'FINISHED';
+  const alpha = isFinished ? 0.18 : 0.28;
+  const col = rp.color || '#00f5ff';
+  const r = 8;
+  const pu = Math.sin(t*4 + (rp.x % 10))*1.5;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.shadowColor = col;
+  ctx.shadowBlur = 14;
+
+  // Outer ghost aura
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(sx, sy, r + pu + 2, 0, Math.PI*2);
+  ctx.stroke();
+
+  // Ghost avatar body
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.arc(sx, sy, r, 0, Math.PI*2);
+  ctx.fill();
+
+  // Subtle core highlight
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(sx - r*0.2, sy - r*0.2, r*0.28, 0, Math.PI*2);
+  ctx.fill();
+
+  // Small subtle name tag above remote player
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = Math.min(1, alpha * 2.2);
+  ctx.fillStyle = col;
+  ctx.font = "7px 'Press Start 2P', monospace";
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(rp.name || 'PLAYER', sx, sy - r - 4);
+
+  if (isFinished) {
+    ctx.font = "6px 'Press Start 2P', monospace";
+    ctx.fillStyle = 'var(--cg)';
+    ctx.fillText('✓ FINISHED', sx, sy + r + 10);
+  } else if (rp.status === 'CHECKPOINT') {
+    ctx.font = "6px 'Press Start 2P', monospace";
+    ctx.fillStyle = 'var(--ck)';
+    ctx.fillText('● CP', sx, sy + r + 10);
+  }
+
   ctx.restore();
 }
 
@@ -1642,6 +1762,35 @@ function drawStart(ctx,t,cx,cy,cs){
   ctx.restore();
 }
 
+let lastPosBroadcast = 0;
+function maybeBroadcastPosition(now){
+  if(now - lastPosBroadcast < 65) return;
+  lastPosBroadcast = now;
+  if(G.state === 'MAZE' || G.state === 'CHECKPOINT'){
+    const pos = plrPx();
+    sendWS({
+      type: 'PLAYER_MOVE',
+      x: Math.round(pos.x * 10) / 10,
+      y: Math.round(pos.y * 10) / 10,
+      c: G.plr.c,
+      r: G.plr.r,
+      direction: G.plr.dc !== 0 ? (G.plr.dc > 0 ? 1 : 3) : (G.plr.dr > 0 ? 2 : 0),
+      sliding: G.plr.sliding,
+      status: G.state
+    });
+  }
+}
+
+function updRemotePlayers(dt){
+  const factor = Math.min(1, 16 * dt);
+  for(const rp of G.remotePlayers.values()){
+    if(rp.targetX !== undefined){
+      rp.x += (rp.targetX - rp.x) * factor;
+      rp.y += (rp.targetY - rp.y) * factor;
+    }
+  }
+}
+
 function startLoop(){stopLoop();lastTs=null;animId=requestAnimationFrame(loop)}
 function stopLoop(){if(animId){cancelAnimationFrame(animId);animId=null}}
 
@@ -1649,6 +1798,9 @@ function loop(ts){
   if(!lastTs)lastTs=ts;
   const dt=Math.min((ts-lastTs)/1000,.05);lastTs=ts;
   const st=G.state;
+
+  maybeBroadcastPosition(ts);
+  updRemotePlayers(dt);
 
   if(st==='MAZE'){
     updPlayer(dt);updSpikes(dt);updCam(dt);updTimer();
@@ -1728,6 +1880,26 @@ function handleWSMessage(msg){
   // Room subscription response / update
   if(msg.type==='ROOM_SUBSCRIBED' || msg.type==='ROOM_LEADERBOARD_UPDATE'){
     if(msg.roomCode && msg.roomCode !== G.roomCode) return; // Strict Room Isolation
+    if(msg.maze) {
+      G.roomMaze = msg.maze;
+    }
+    if(msg.remotePlayers && Array.isArray(msg.remotePlayers)) {
+      G.remotePlayers.clear();
+      for (const rp of msg.remotePlayers) {
+        if (rp.id !== G.playerId) {
+          G.remotePlayers.set(rp.id, {
+            id: rp.id,
+            name: rp.name,
+            color: rp.color,
+            status: rp.status || 'PLAYING',
+            x: rp.x || 1 * 28 + 14,
+            y: rp.y || 1 * 28 + 14,
+            targetX: rp.x || 1 * 28 + 14,
+            targetY: rp.y || 1 * 28 + 14,
+          });
+        }
+      }
+    }
     if(msg.summary){
       document.getElementById('waitPlrCount').textContent = msg.summary.connectedPlayers || 1;
     }
@@ -1735,6 +1907,37 @@ function handleWSMessage(msg){
       renderWaitingRoster(msg.leaderboard);
       renderLiveLeaderboard(msg.leaderboard);
     }
+    return;
+  }
+
+  // Real-time remote player position updates (10-20 Hz)
+  if(msg.type==='REMOTE_PLAYER_MOVE'){
+    if(msg.playerId === G.playerId) return;
+    let rp = G.remotePlayers.get(msg.playerId);
+    if(!rp){
+      rp = {
+        id: msg.playerId,
+        name: msg.name,
+        color: msg.color,
+        status: msg.status || 'PLAYING',
+        x: msg.x,
+        y: msg.y,
+        targetX: msg.x,
+        targetY: msg.y,
+      };
+      G.remotePlayers.set(msg.playerId, rp);
+    } else {
+      rp.targetX = msg.x;
+      rp.targetY = msg.y;
+      rp.status = msg.status || rp.status;
+      if (msg.color) rp.color = msg.color;
+      if (msg.name) rp.name = msg.name;
+    }
+    return;
+  }
+
+  if(msg.type==='REMOTE_PLAYER_LEFT'){
+    G.remotePlayers.delete(msg.playerId);
     return;
   }
 
@@ -1863,8 +2066,10 @@ function renderWaitingRoster(players){
   }
   el.innerHTML=players.map((p, idx)=>{
     const isSelf=p.id===G.playerId;
-    return `<div class="player-pill ${isSelf?'self':''}">
-      ${idx+1}. <strong>${escapeHtml(p.name)}</strong> (${escapeHtml(p.class)}) ${isSelf?'★':''}
+    const col=p.color || '#00f5ff';
+    return `<div class="player-pill ${isSelf?'self':''}" style="border-color:${col}">
+      <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${col};box-shadow:0 0 5px ${col}"></span>
+      ${idx+1}. <strong style="color:${col}">${escapeHtml(p.name)}</strong> (${escapeHtml(p.class)}) ${isSelf?'★':''}
     </div>`;
   }).join('');
 }
@@ -1882,6 +2087,7 @@ function renderLiveLeaderboard(players){
     const isSelf=p.id===G.playerId;
     const isFinished=p.status==='FINISHED';
     const rankNum=p.rank||idx+1;
+    const col=p.color || '#00f5ff';
 
     let rankStr=`#${rankNum}`;
     let rankCls='';
@@ -1895,7 +2101,10 @@ function renderLiveLeaderboard(players){
       <div class="lb-item ${isSelf?'self':''} ${rankCls}">
         <div class="lb-rank">${rankStr}</div>
         <div class="lb-info">
-          <div class="lb-name">${escapeHtml(p.name)} ${isSelf?'<span style="color:var(--ck)">(YOU)</span>':''}</div>
+          <div class="lb-name">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};box-shadow:0 0 5px ${col};margin-right:4px;vertical-align:middle"></span>
+            ${escapeHtml(p.name)} ${isSelf?'<span style="color:var(--ck)">(YOU)</span>':''}
+          </div>
           <div class="lb-class">${escapeHtml(p.class)} · CP ${p.currentCp||0}/5</div>
         </div>
         <div class="lb-status-col">
@@ -1915,6 +2124,7 @@ function renderFinalLeaderboard(players){
     const isSelf=p.id===G.playerId;
     const isFinished=p.status==='FINISHED';
     const rankNum=p.rank||idx+1;
+    const col=p.color || '#00f5ff';
 
     let rankStr=`#${rankNum}`;
     if(rankNum===1 && isFinished) rankStr='🏆 1ST PLACE';
@@ -1925,7 +2135,10 @@ function renderFinalLeaderboard(players){
       <div class="lb-item ${isSelf?'self':''}" style="padding:10px 14px">
         <div style="font-family:var(--font);color:var(--ck);min-width:90px">${rankStr}</div>
         <div class="lb-info">
-          <div style="font-size:10px;font-weight:bold">${escapeHtml(p.name)} ${isSelf?'(YOU)':''}</div>
+          <div style="font-size:10px;font-weight:bold">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};box-shadow:0 0 5px ${col};margin-right:4px;vertical-align:middle"></span>
+            ${escapeHtml(p.name)} ${isSelf?'(YOU)':''}
+          </div>
           <div class="lb-class">${escapeHtml(p.class)} · Checkpoints: ${p.currentCp||0}/5</div>
         </div>
         <div style="text-align:right">
@@ -2036,6 +2249,14 @@ function setupUIEvents(){
         G.playerClass = data.player.class;
         G.roomCode = roomCode;
 
+        if (data.player.color) {
+          G.playerColor = data.player.color;
+          sessionStorage.setItem('neon_player_color', G.playerColor);
+        }
+        if (data.maze) {
+          G.roomMaze = data.maze;
+        }
+
         sessionStorage.setItem('neon_player_token', G.playerToken);
         sessionStorage.setItem('neon_player_name', G.playerName);
         sessionStorage.setItem('neon_player_class', G.playerClass);
@@ -2088,9 +2309,11 @@ function setupUIEvents(){
   const savedName = sessionStorage.getItem('neon_player_name');
   const savedClass = sessionStorage.getItem('neon_player_class');
   const savedRoom = sessionStorage.getItem('neon_room_code');
+  const savedColor = sessionStorage.getItem('neon_player_color');
   if (savedName) regName.value = savedName;
   if (savedClass) regClass.value = savedClass;
   if (savedRoom) regRoom.value = savedRoom;
+  if (savedColor) G.playerColor = savedColor;
 }
 
 function init(){

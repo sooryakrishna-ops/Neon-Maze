@@ -610,17 +610,27 @@
 
     <section class="room-banner">
       <div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:2px;margin-bottom:4px">COMPETITION ROOM
-          CODE</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:2px;margin-bottom:4px">COMPETITION ROOM CODE</div>
         <div class="room-code-display">
           <span id="bannerRoomCode">—</span>
           <button class="btn gold" id="btnCopyCode" style="font-size:9px;padding:8px 14px">📋 COPY ROOM CODE</button>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
-        <div id="bannerRoomStatus" class="badge-state WAITING">WAITING</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.7)">
-          PLAYERS: <strong id="bannerPlayerCount" style="color:var(--cc)">0</strong> / 50
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:10px;color:rgba(255,255,255,0.7);background:rgba(0,245,255,0.08);border:1px solid rgba(0,245,255,0.3);padding:8px 12px;border-radius:4px;letter-spacing:1px">
+          MAZE: <strong style="color:var(--cg)">GENERATED</strong>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.7);background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);padding:8px 12px;border-radius:4px;letter-spacing:1px">
+          MAZE SEED: <strong id="bannerMazeSeed" style="color:var(--ck)">—</strong>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.7);background:rgba(123,47,255,0.08);border:1px solid rgba(123,47,255,0.3);padding:8px 12px;border-radius:4px;letter-spacing:1px">
+          CHECKPOINTS: <strong id="bannerCheckpoints" style="color:var(--cc)">5</strong>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <div id="bannerRoomStatus" class="badge-state WAITING">WAITING</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.7)">
+            PLAYERS: <strong id="bannerPlayerCount" style="color:var(--cc)">0</strong> / 50
+          </div>
         </div>
       </div>
     </section>
@@ -930,6 +940,12 @@
 
     function updateRoomBanner(room) {
       document.getElementById('bannerPlayerCount').textContent = room.totalPlayers || 0;
+      if (document.getElementById('bannerMazeSeed')) {
+        document.getElementById('bannerMazeSeed').textContent = room.mazeSeed || '—';
+      }
+      if (document.getElementById('bannerCheckpoints')) {
+        document.getElementById('bannerCheckpoints').textContent = room.totalCheckpoints || 5;
+      }
       updateRoomStatus(room.status);
 
       // Configure controls based on room status
@@ -978,11 +994,13 @@
           ? `<span class="time-val">${p.durationStr || '--'}</span>`
           : `<span class="time-empty">--</span>`;
 
+        const colorDot = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${p.color || '#00f5ff'};box-shadow:0 0 6px ${p.color || '#00f5ff'};margin-right:6px;vertical-align:middle"></span>`;
+
         return `
       <tr>
         <td>${rankBadge}</td>
         <td>
-          <div class="pname">${escapeHtml(p.name)}</div>
+          <div class="pname">${colorDot}${escapeHtml(p.name)}</div>
           <div style="font-size:10px;color:${p.connected ? '#39ff14' : '#888'}">${p.connected ? '● CONNECTED' : '○ DISCONNECTED'}</div>
         </td>
         <td><span class="pclass">${escapeHtml(p.class)}</span></td>

@@ -69,10 +69,222 @@ function sanitizeText(str, maxLen = 30) {
 }
 
 // ==========================================
+// 50 UNIQUE RETRO ARCADE PLAYER COLORS PALETTE
+// ==========================================
+function hslToHex(h, s, l) {
+  l /= 100;
+  const a = s * Math.min(l, 1 - l) / 100;
+  const f = n => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+// 50 distinct neon colors distributed via the golden ratio for maximum consecutive contrast
+const PLAYER_COLOR_PALETTE = (() => {
+  const palette = [];
+  for (let i = 0; i < 50; i++) {
+    const h = Math.round((i * 137.508) % 360);
+    palette.push(hslToHex(h, 95, 62));
+  }
+  return palette;
+})();
+
+// ==========================================
+// PROCEDURAL MAZE GENERATOR & VALIDATOR
+// ==========================================
+function mkRng(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (Math.imul(1664525, s) + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+function bfsPath(grid, sc, sr, ec, er) {
+  const R = grid.length, C = grid[0].length;
+  const vis = Array(R).fill(0).map(() => new Uint8Array(C));
+  const par = Array(R).fill(0).map(() => Array(C).fill(null));
+  const q = [[sc, sr]];
+  vis[sr][sc] = 1;
+
+  while (q.length) {
+    const [c, r] = q.shift();
+    if (c === ec && r === er) {
+      const p = [];
+      let cur = [ec, er];
+      while (cur) {
+        p.unshift(cur);
+        cur = par[cur[1]][cur[0]];
+      }
+      return p;
+    }
+    for (const [dc, dr] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
+      const nc = c + dc, nr = r + dr;
+      if (nc >= 0 && nc < C && nr >= 0 && nr < R && !vis[nr][nc] && grid[nr][nc] === 0) {
+        vis[nr][nc] = 1;
+        par[nr][nc] = [c, r];
+        q.push([nc, nr]);
+      }
+    }
+  }
+  return null;
+}
+
+function generateValidatedRoomMaze(initialSeed) {
+  const C = 51, R = 35; // Arcade dimensions
+  let currentSeed = initialSeed;
+
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const rng = mkRng(currentSeed);
+    const grid = Array(R).fill(0).map(() => new Uint8Array(C).fill(1));
+
+    function shuffle(a) {
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // Depth-first search with backtracking
+    const stk = [[1, 1]];
+    grid[1][1] = 0;
+
+    while (stk.length) {
+      const [c, r] = stk[stk.length - 1];
+      const dirs = shuffle([[0, -2], [0, 2], [-2, 0], [2, 0]]);
+      let moved = false;
+      for (const [dc, dr] of dirs) {
+        const nc = c + dc, nr = r + dr;
+        if (nc > 0 && nc < C - 1 && nr > 0 && nr < R - 1 && grid[nr][nc] === 1) {
+          grid[r + dr / 2][c + dc / 2] = 0;
+          grid[nr][nc] = 0;
+          stk.push([nc, nr]);
+          moved = true;
+          break;
+        }
+      }
+      if (!moved) stk.pop();
+    }
+
+    // Add loops and alternative routes (14% chance on interior wall dividing corridors)
+    for (let r = 2; r < R - 2; r += 2) {
+      for (let c = 2; c < C - 2; c += 2) {
+        if (grid[r][c] === 1 && rng() < 0.14) {
+          const horiz = grid[r][c - 1] === 0 && grid[r][c + 1] === 0;
+          const vert = grid[r - 1][c] === 0 && grid[r + 1][c] === 0;
+          if (horiz || vert) grid[r][c] = 0;
+        }
+      }
+    }
+
+    // Carve Exit area in bottom-right corner
+    const ec = C - 2, er = R - 2;
+    grid[er][ec] = 0;
+    grid[er - 1][ec] = 0;
+    grid[er][ec - 1] = 0;
+
+    // Find programmatic solution path from Start [1, 1] to Exit [ec, er]
+    const solutionPath = bfsPath(grid, 1, 1, ec, er);
+    if (!solutionPath || solutionPath.length < 60) {
+      currentSeed = (currentSeed + 1337) >>> 0;
+      continue;
+    }
+
+    // Section solution path to place exactly 5 checkpoints at progression intervals:
+    // ~18%, ~38%, ~58%, ~78%, ~90%
+    const fractions = [0.18, 0.38, 0.58, 0.78, 0.90];
+    const checkpoints = fractions.map((frac, idx) => {
+      const pIdx = Math.floor(solutionPath.length * frac);
+      const cell = solutionPath[pIdx];
+      return {
+        id: idx + 1,
+        c: cell[0],
+        r: cell[1],
+        pathStep: pIdx,
+        pathPercent: Math.round(frac * 100),
+        done: false,
+      };
+    });
+
+    // Validate sequential solvability:
+    // START -> CP1 -> CP2 -> CP3 -> CP4 -> CP5 -> EXIT
+    let valid = true;
+    let prevC = 1, prevR = 1;
+    for (const cp of checkpoints) {
+      const subPath = bfsPath(grid, prevC, prevR, cp.c, cp.r);
+      if (!subPath) { valid = false; break; }
+      prevC = cp.c;
+      prevR = cp.r;
+    }
+    if (valid) {
+      const finalLeg = bfsPath(grid, prevC, prevR, ec, er);
+      if (!finalLeg) valid = false;
+    }
+
+    if (!valid) {
+      currentSeed = (currentSeed + 1337) >>> 0;
+      continue;
+    }
+
+    // Generate Timed Spikes (Traps)
+    // Avoid Start, Exit, and Checkpoints (+ buffer)
+    const occupied = new Set([
+      '1,1', '1,2', '2,1',
+      `${ec},${er}`, `${ec - 1},${er}`, `${ec},${er - 1}`,
+      ...checkpoints.flatMap(cp => [
+        `${cp.c},${cp.r}`,
+        `${cp.c + 1},${cp.r}`, `${cp.c - 1},${cp.r}`,
+        `${cp.c},${cp.r + 1}`, `${cp.c},${cp.r - 1}`
+      ])
+    ]);
+
+    const candidates = [];
+    for (let r = 1; r < R - 1; r++) {
+      for (let c = 1; c < C - 1; c++) {
+        if (grid[r][c] === 0 && !occupied.has(`${c},${r}`)) {
+          candidates.push([c, r]);
+        }
+      }
+    }
+
+    shuffle(candidates);
+    const spikeCount = 20;
+    const spikes = candidates.slice(0, spikeCount).map((pos, i) => ({
+      c: pos[0],
+      r: pos[1],
+      phase: 'safe',
+      timer: i * 650,
+      prog: 0,
+    }));
+
+    // Convert grid to array of compact strings for easy network transport
+    const gridStrings = grid.map(row => Array.from(row).join(''));
+
+    return {
+      seed: currentSeed,
+      width: C,
+      height: R,
+      grid: gridStrings,
+      start: { c: 1, r: 1 },
+      exit: { c: ec, r: er },
+      checkpoints,
+      spikes,
+      solutionPathLength: solutionPath.length,
+    };
+  }
+
+  throw new Error('Failed to generate valid maze after 50 attempts');
+}
+
+// ==========================================
 // COMPETITION ROOM CLASS
 // ==========================================
 class CompetitionRoom {
-  constructor(code = null) {
+  constructor(code = null, seed = null) {
     this.id = generateId('room');
     this.code = code || generateRoomCode();
     this.status = 'WAITING'; // WAITING, READY, STARTED, FINISHED, CLOSED
@@ -83,6 +295,13 @@ class CompetitionRoom {
     this.totalCheckpoints = 5;
     this.players = new Map(); // playerId -> player
     this.countdownTimer = null;
+
+    // Room-specific color pool (up to 50 players)
+    this.availableColors = [...PLAYER_COLOR_PALETTE];
+
+    // Procedural room maze generated once per room and persisted
+    this.mazeSeed = seed || Math.floor(100000 + Math.random() * 900000);
+    this.maze = generateValidatedRoomMaze(this.mazeSeed);
   }
 
   registerPlayer(name, playerClass, clientToken = null) {
@@ -95,12 +314,7 @@ class CompetitionRoom {
     if (this.status === 'STARTED') return { success: false, error: 'ROOM ALREADY STARTED' };
     if (this.status === 'FINISHED' || this.status === 'CLOSED') return { success: false, error: 'ROOM IS CLOSED' };
 
-    // Check capacity
-    if (this.players.size >= this.maxPlayers) {
-      return { success: false, error: `ROOM FULL (MAX ${this.maxPlayers} PLAYERS)` };
-    }
-
-    // Check reconnection by token
+    // Check reconnection by token first (existing player reconnecting)
     if (clientToken) {
       for (const p of this.players.values()) {
         if (p.token === clientToken) {
@@ -108,6 +322,11 @@ class CompetitionRoom {
           return { success: true, player: p, isReconnect: true };
         }
       }
+    }
+
+    // Check capacity for new players (Strictly max 50 players)
+    if (this.players.size >= this.maxPlayers) {
+      return { success: false, error: 'ROOM FULL (MAX 50 PLAYERS)' };
     }
 
     // Check duplicate name in this room
@@ -120,11 +339,17 @@ class CompetitionRoom {
     const playerId = generateId('plr');
     const token = generateId('tok');
 
+    // Assign unique color from 50-color palette for this room
+    const color = this.availableColors.length > 0
+      ? this.availableColors.shift()
+      : PLAYER_COLOR_PALETTE[this.players.size % PLAYER_COLOR_PALETTE.length];
+
     const player = {
       id: playerId,
       token,
       name: cleanName,
       class: cleanClass,
+      color,
       roomId: this.id,
       roomCode: this.code,
       status: this.status === 'STARTED' ? 'PLAYING' : 'READY',
@@ -139,6 +364,12 @@ class CompetitionRoom {
       rank: null,
       registrationTime: Date.now(),
       ws: null,
+      x: 1 * 28 + 14,
+      y: 1 * 28 + 14,
+      c: 1,
+      r: 1,
+      direction: 0,
+      sliding: false,
     };
 
     this.players.set(playerId, player);
@@ -294,6 +525,7 @@ class CompetitionRoom {
       id: p.id,
       name: p.name,
       class: p.class,
+      color: p.color,
       status: p.status,
       currentCp: p.currentCp,
       totalCps: p.totalCps,
@@ -315,6 +547,8 @@ class CompetitionRoom {
       createdAt: this.createdAt,
       startTime: this.startTime,
       endTime: this.endTime,
+      mazeSeed: this.mazeSeed,
+      totalCheckpoints: this.totalCheckpoints,
       maxPlayers: this.maxPlayers,
       totalPlayers: players.length,
       connectedPlayers: players.filter(p => p.connected).length,
@@ -335,11 +569,14 @@ class CompetitionRoom {
         createdAt: this.createdAt,
         startTime: this.startTime,
         endTime: this.endTime,
+        mazeSeed: this.mazeSeed,
+        maze: this.maze,
         maxPlayers: this.maxPlayers,
         players: Array.from(this.players.values()).map(p => ({
           id: p.id,
           name: p.name,
           class: p.class,
+          color: p.color,
           status: p.status,
           currentCp: p.currentCp,
           attempts: p.attempts,
@@ -379,7 +616,8 @@ class RoomManager {
       code = generateRoomCode();
     } while (this.roomsByCode.has(code));
 
-    const room = new CompetitionRoom(code);
+    const seed = Math.floor(100000 + Math.random() * 900000);
+    const room = new CompetitionRoom(code, seed);
     this.rooms.set(room.id, room);
     this.roomsByCode.set(code, room);
     room.persistSnapshot();
@@ -478,6 +716,7 @@ app.get('/api/admin/rooms/:code', (req, res) => {
       id: p.id,
       name: p.name,
       class: p.class,
+      color: p.color,
       status: p.status,
       currentCp: p.currentCp,
       totalCps: p.totalCps,
@@ -618,11 +857,13 @@ app.post('/api/rooms/join', (req, res) => {
       token: p.token,
       name: p.name,
       class: p.class,
+      color: p.color,
       status: p.status,
       currentCp: p.currentCp,
       rank: p.rank,
     },
     room: room.getSummary(),
+    maze: room.maze,
     leaderboard: room.getLeaderboardData(),
     serverTime: Date.now(),
   });
@@ -641,6 +882,19 @@ function broadcastToRoom(roomCode, msgObj) {
   for (const client of wss.clients) {
     if (client.readyState === WebSocket.OPEN) {
       if (client.roomCode === upperCode || client.isAdmin) {
+        client.send(json);
+      }
+    }
+  }
+}
+
+// Broadcast to other players in room EXCEPT the sender (for smooth remote ghost motion)
+function broadcastToRoomExcept(roomCode, senderWs, msgObj) {
+  const json = JSON.stringify(msgObj);
+  const upperCode = (roomCode || '').toUpperCase();
+  for (const client of wss.clients) {
+    if (client !== senderWs && client.readyState === WebSocket.OPEN) {
+      if (client.roomCode === upperCode) {
         client.send(json);
       }
     }
@@ -701,9 +955,10 @@ wss.on('connection', (ws) => {
 
         ws.roomCode = cleanCode;
 
+        let player = null;
         // If playerToken provided, bind player connection
         if (data.playerToken) {
-          const player = room.getPlayerByToken(data.playerToken);
+          player = room.getPlayerByToken(data.playerToken);
           if (player) {
             ws.playerId = player.id;
             player.ws = ws;
@@ -711,14 +966,66 @@ wss.on('connection', (ws) => {
           }
         }
 
+        // Gather existing connected players in room to send to new subscriber
+        const existingPlayers = Array.from(room.players.values())
+          .filter(p => p.id !== (player ? player.id : null) && p.connected)
+          .map(p => ({
+            id: p.id,
+            name: p.name,
+            class: p.class,
+            color: p.color,
+            status: p.status,
+            x: p.x,
+            y: p.y,
+            c: p.c,
+            r: p.r,
+            direction: p.direction,
+            sliding: p.sliding,
+          }));
+
         ws.send(JSON.stringify({
           type: 'ROOM_SUBSCRIBED',
           room: room.getSummary(),
+          maze: room.maze,
+          remotePlayers: existingPlayers,
           leaderboard: room.getLeaderboardData(),
           serverTime: Date.now(),
         }));
 
         broadcastRoomLeaderboard(room);
+        return;
+      }
+
+      // Real-time Position Synchronization (10-20 Hz, Room-Scoped, Visual Only)
+      if (data.type === 'PLAYER_MOVE') {
+        if (!ws.roomCode || !ws.playerId) return;
+        const room = roomManager.getRoomByCode(ws.roomCode);
+        if (!room) return;
+        const player = room.players.get(ws.playerId);
+        if (!player) return;
+
+        if (typeof data.x === 'number') player.x = data.x;
+        if (typeof data.y === 'number') player.y = data.y;
+        if (typeof data.c === 'number') player.c = data.c;
+        if (typeof data.r === 'number') player.r = data.r;
+        if (data.direction !== undefined) player.direction = data.direction;
+        if (data.sliding !== undefined) player.sliding = data.sliding;
+        if (data.status) player.status = data.status;
+
+        // Broadcast to other players in this room only (never cross rooms)
+        broadcastToRoomExcept(ws.roomCode, ws, {
+          type: 'REMOTE_PLAYER_MOVE',
+          playerId: player.id,
+          name: player.name,
+          color: player.color,
+          status: player.status,
+          x: player.x,
+          y: player.y,
+          c: player.c,
+          r: player.r,
+          direction: player.direction,
+          sliding: player.sliding,
+        });
         return;
       }
 
@@ -830,6 +1137,10 @@ wss.on('connection', (ws) => {
           }
           player.ws = null;
           broadcastRoomLeaderboard(room);
+          broadcastToRoom(room.code, {
+            type: 'REMOTE_PLAYER_LEFT',
+            playerId: player.id,
+          });
         }
       }
     }
