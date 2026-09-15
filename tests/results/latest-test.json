@@ -1,0 +1,1159 @@
+{
+  "timestamp": "2026-09-15T17:14:17.538Z",
+  "url": "https://neon-maze-nice.vercel.app",
+  "roomCode": "HQCBTU",
+  "players": 49,
+  "joined": 0,
+  "started": 0,
+  "finished": 0,
+  "dnf": 0,
+  "errors": 49,
+  "fastest": null,
+  "slowestFinish": null,
+  "averageTimeStr": "--",
+  "cpFailures": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "network": {
+    "realtimeErrors": 0,
+    "reconnects": 0,
+    "leaderboardDelays": 0
+  },
+  "room": {
+    "startDetected": false,
+    "endDetected": false
+  },
+  "botDetails": [
+    {
+      "name": "SIM-01",
+      "skill": "EXPERT",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492438632,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-02",
+      "skill": "EXPERT",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492438627,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-03",
+      "skill": "EXPERT",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492438633,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-04",
+      "skill": "EXPERT",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492438628,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-05",
+      "skill": "EXPERT",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492438626,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-06",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492438628,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-07",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492438627,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-08",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492438605,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-09",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492438878,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-10",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492439078,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-11",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492440311,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-12",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492440559,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-13",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492440795,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-14",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492440902,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-15",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492441245,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-16",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492442460,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-17",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492442788,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-18",
+      "skill": "GOOD",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492443113,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-19",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492443379,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-20",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492443627,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-21",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492444805,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-22",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492445008,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-23",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492445194,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-24",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492445474,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-25",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492445845,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-26",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492447039,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-27",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492447352,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-28",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492447711,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-29",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492447867,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-30",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492447990,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-31",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492449249,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-32",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492449578,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-33",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492449781,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-34",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492450029,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-35",
+      "skill": "AVERAGE",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492450280,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-36",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492451509,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-37",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492451790,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-38",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492452130,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-39",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492452520,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-40",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492452659,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-41",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492453952,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-42",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492454155,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-43",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492454518,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-44",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492454596,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-45",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492454934,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-46",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492456112,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-47",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492456486,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-48",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492456811,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    },
+    {
+      "name": "SIM-49",
+      "skill": "POOR",
+      "status": "ERROR",
+      "cpProgress": 0,
+      "durationStr": "--",
+      "joinTimeMs": null,
+      "stuckCount": 0,
+      "networkErrors": 0,
+      "cpFailures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "errors": [
+        {
+          "time": 1789492457044,
+          "msg": "Join failed: page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#bstart') to "
+        }
+      ]
+    }
+  ]
+}
