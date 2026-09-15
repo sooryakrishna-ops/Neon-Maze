@@ -47,6 +47,14 @@ function formatDuration(ms) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
 }
 
+// Format MM:SS for duration display
+function formatMMSS(seconds) {
+  if (!seconds || isNaN(seconds)) return '05:00';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 // Unique IDs
 function generateId(prefix = 'id') {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
@@ -273,6 +281,7 @@ function generateValidatedRoomMaze(initialSeed) {
       exit: { c: ec, r: er },
       checkpoints,
       spikes,
+      solutionPath: solutionPath, // full path for progress calculation
       solutionPathLength: solutionPath.length,
     };
   }
@@ -284,17 +293,19 @@ function generateValidatedRoomMaze(initialSeed) {
 // COMPETITION ROOM CLASS
 // ==========================================
 class CompetitionRoom {
-  constructor(code = null, seed = null) {
+  constructor(code = null, seed = null, durationSeconds = 300) {
     this.id = generateId('room');
     this.code = code || generateRoomCode();
     this.status = 'WAITING'; // WAITING, READY, STARTED, FINISHED, CLOSED
     this.createdAt = Date.now();
     this.startTime = null;
     this.endTime = null;
+    this.durationSeconds = Math.max(60, Math.min(3600, durationSeconds || 300));
     this.maxPlayers = 50;
     this.totalCheckpoints = 5;
     this.players = new Map(); // playerId -> player
     this.countdownTimer = null;
+    this.expiryTimer = null; // Server-side timer to end competition at endTime
 
     // Room-specific color pool (up to 50 players)
     this.availableColors = [...PLAYER_COLOR_PALETTE];
@@ -304,12 +315,12 @@ class CompetitionRoom {
     this.maze = generateValidatedRoomMaze(this.mazeSeed);
   }
 
+  // Register a player into this room (class field removed)
   registerPlayer(name, playerClass, clientToken = null) {
     const cleanName = sanitizeText(name, 24);
-    const cleanClass = sanitizeText(playerClass, 20);
+    // playerClass is accepted but not required (backward compat)
 
     if (!cleanName) return { success: false, error: 'NAME REQUIRED' };
-    if (!cleanClass) return { success: false, error: 'CLASS REQUIRED' };
 
     if (this.status === 'STARTED') return { success: false, error: 'ROOM ALREADY STARTED' };
     if (this.status === 'FINISHED' || this.status === 'CLOSED') return { success: false, error: 'ROOM IS CLOSED' };
@@ -348,7 +359,6 @@ class CompetitionRoom {
       id: playerId,
       token,
       name: cleanName,
-      class: cleanClass,
       color,
       roomId: this.id,
       roomCode: this.code,
@@ -370,6 +380,12 @@ class CompetitionRoom {
       r: 1,
       direction: 0,
       sliding: false,
+      // Progress tracking fields
+      progressPercentage: 0,
+      lastCompletedCheckpoint: -1, // -1 = none (respawn at start)
+      lastCompletedCheckpointPos: null, // { c, r }
+      solutionPathProgress: 0,
+      progressTimestamp: Date.now(),
     };
 
     this.players.set(playerId, player);
@@ -395,13 +411,15 @@ class CompetitionRoom {
 
     this.status = 'READY';
     this.startTime = Date.now() + leadTimeMs;
+    // Compute authoritative endTime: start + configured duration
+    this.endTime = this.startTime + this.durationSeconds * 1000;
 
     for (const p of this.players.values()) {
       p.status = 'READY';
     }
 
     this.persistSnapshot();
-    return { success: true, roomStartTime: this.startTime };
+    return { success: true, roomStartTime: this.startTime, roomEndTime: this.endTime };
   }
 
   startCompetitionNow() {
@@ -411,6 +429,28 @@ class CompetitionRoom {
         p.status = 'PLAYING';
       }
     }
+
+    // Schedule automatic room expiry at server-authoritative endTime
+    if (this.expiryTimer) clearTimeout(this.expiryTimer);
+    const msUntilExpiry = this.endTime - Date.now();
+    if (msUntilExpiry > 0) {
+      this.expiryTimer = setTimeout(() => {
+        if (this.status === 'STARTED') {
+          console.log(`⏰ Room ${this.code} timer expired — ending competition automatically`);
+          this.endCompetition('TIMER_EXPIRED');
+          broadcastToRoom(this.code, {
+            type: 'ROOM_COMPLETED',
+            roomCode: this.code,
+            reason: 'COMPETITION TIMER EXPIRED',
+            leaderboard: this.getLeaderboardData(),
+            summary: this.getSummary(),
+            serverTime: Date.now(),
+          });
+          broadcastRoomLeaderboard(this);
+        }
+      }, msUntilExpiry);
+    }
+
     this.persistSnapshot();
   }
 
@@ -423,20 +463,44 @@ class CompetitionRoom {
     return player;
   }
 
-  handlePlayerCpClear(playerId, cpIndex) {
+  handlePlayerCpClear(playerId, cpIndex, progressPercentage) {
     const player = this.players.get(playerId);
     if (!player) return null;
     player.currentCp = Math.max(player.currentCp, cpIndex + 1);
     if (player.status !== 'FINISHED' && player.status !== 'DNF') {
       player.status = 'PLAYING';
     }
+
+    // Update last completed checkpoint for respawn logic
+    if (cpIndex >= player.lastCompletedCheckpoint) {
+      player.lastCompletedCheckpoint = cpIndex;
+      // Store actual checkpoint position from maze data
+      const cpData = this.maze && this.maze.checkpoints && this.maze.checkpoints[cpIndex];
+      if (cpData) {
+        player.lastCompletedCheckpointPos = { c: cpData.c, r: cpData.r };
+      }
+    }
+
+    // Update progress tracking
+    if (typeof progressPercentage === 'number' && !isNaN(progressPercentage)) {
+      player.progressPercentage = Math.max(player.progressPercentage, Math.min(100, progressPercentage));
+    } else {
+      // Estimate from checkpoint index if client didn't send it
+      const fractions = [0.18, 0.38, 0.58, 0.78, 0.90, 1.0];
+      player.progressPercentage = Math.max(player.progressPercentage, Math.round(fractions[cpIndex] * 100));
+    }
+    player.progressTimestamp = Date.now();
+
     return player;
   }
 
+  // handlePlayerReset — for checkpoint failure, only resets to last completed checkpoint
+  // Spike hits still call this too, but now it respects lastCompletedCheckpoint
   handlePlayerReset(playerId, reason) {
     const player = this.players.get(playerId);
     if (!player) return null;
-    player.currentCp = 0;
+    // Do NOT reset currentCp to 0 — keep progress at lastCompletedCheckpoint + 1
+    // Only reset attempts counter for tracking
     player.attempts += 1;
     if (player.status !== 'FINISHED' && player.status !== 'DNF') {
       player.status = 'PLAYING';
@@ -454,11 +518,25 @@ class CompetitionRoom {
     }
 
     const now = Date.now();
+
+    // Server-side deadline validation: finish event must arrive before endTime
+    if (this.endTime && now > this.endTime + 2000) {
+      // Allow 2 second grace window for network lag
+      return { success: false, error: 'COMPETITION DEADLINE EXCEEDED' };
+    }
+
+    // Guard against duplicate finish submissions
+    if (player.finishServerTime) {
+      return { success: false, error: 'PLAYER ALREADY FINISHED' };
+    }
+
     player.finishServerTime = now;
     player.durationMs = Math.max(0, now - (this.startTime || now));
     player.durationStr = formatDuration(player.durationMs);
     player.status = 'FINISHED';
     player.score = score;
+    player.progressPercentage = 100;
+    player.progressTimestamp = now;
 
     this.updateRankings();
     this.persistSnapshot();
@@ -478,8 +556,12 @@ class CompetitionRoom {
       clearTimeout(this.countdownTimer);
       this.countdownTimer = null;
     }
+    if (this.expiryTimer) {
+      clearTimeout(this.expiryTimer);
+      this.expiryTimer = null;
+    }
     this.status = 'FINISHED';
-    this.endTime = Date.now();
+    if (!this.endTime) this.endTime = Date.now();
 
     for (const p of this.players.values()) {
       if (p.status !== 'FINISHED') {
@@ -492,30 +574,39 @@ class CompetitionRoom {
     return { success: true, reason };
   }
 
+  // Deterministic ranking:
+  // 1. FINISHED players ranked by durationMs ascending
+  // 2. Non-finished: ranked by progressPercentage desc → checkpoint count desc → progressTimestamp asc → playerId
   updateRankings() {
     const playerList = Array.from(this.players.values());
 
     playerList.sort((a, b) => {
+      // FINISHED always ranks above unfinished
       if (a.status === 'FINISHED' && b.status === 'FINISHED') {
         return (a.durationMs || Infinity) - (b.durationMs || Infinity);
       }
       if (a.status === 'FINISHED') return -1;
       if (b.status === 'FINISHED') return 1;
 
-      if (a.status === 'DNF' && b.status !== 'DNF') return 1;
-      if (b.status === 'DNF' && a.status !== 'DNF') return -1;
+      // Among unfinished: progress percentage descending
+      const progDiff = (b.progressPercentage || 0) - (a.progressPercentage || 0);
+      if (Math.abs(progDiff) > 0.5) return progDiff;
 
-      if (b.currentCp !== a.currentCp) return b.currentCp - a.currentCp;
-      return a.attempts - b.attempts;
+      // Same progress: checkpoint count descending
+      const cpDiff = (b.currentCp || 0) - (a.currentCp || 0);
+      if (cpDiff !== 0) return cpDiff;
+
+      // Same checkpoint: earlier progress timestamp wins (achieved it first)
+      const tsDiff = (a.progressTimestamp || 0) - (b.progressTimestamp || 0);
+      if (tsDiff !== 0) return tsDiff;
+
+      // Final deterministic tie-breaker: playerId string comparison
+      return a.id < b.id ? -1 : 1;
     });
 
-    let finishedRank = 1;
-    playerList.forEach((p, idx) => {
-      if (p.status === 'FINISHED') {
-        p.rank = finishedRank++;
-      } else {
-        p.rank = idx + 1;
-      }
+    let rank = 1;
+    playerList.forEach((p) => {
+      p.rank = rank++;
     });
   }
 
@@ -524,7 +615,6 @@ class CompetitionRoom {
     return Array.from(this.players.values()).map(p => ({
       id: p.id,
       name: p.name,
-      class: p.class,
       color: p.color,
       status: p.status,
       currentCp: p.currentCp,
@@ -535,11 +625,19 @@ class CompetitionRoom {
       rank: p.rank,
       connected: p.connected,
       score: p.score,
+      progressPercentage: p.progressPercentage || 0,
+      lastCompletedCheckpoint: p.lastCompletedCheckpoint,
+      progressTimestamp: p.progressTimestamp,
     }));
   }
 
   getSummary() {
     const players = Array.from(this.players.values());
+    const now = Date.now();
+    const timeRemainingMs = (this.status === 'STARTED' && this.endTime)
+      ? Math.max(0, this.endTime - now)
+      : null;
+
     return {
       roomId: this.id,
       roomCode: this.code,
@@ -547,6 +645,10 @@ class CompetitionRoom {
       createdAt: this.createdAt,
       startTime: this.startTime,
       endTime: this.endTime,
+      durationSeconds: this.durationSeconds,
+      durationStr: formatMMSS(this.durationSeconds),
+      timeRemainingMs,
+      timeRemainingStr: timeRemainingMs !== null ? formatMMSS(Math.ceil(timeRemainingMs / 1000)) : '--',
       mazeSeed: this.mazeSeed,
       totalCheckpoints: this.totalCheckpoints,
       maxPlayers: this.maxPlayers,
@@ -569,13 +671,13 @@ class CompetitionRoom {
         createdAt: this.createdAt,
         startTime: this.startTime,
         endTime: this.endTime,
+        durationSeconds: this.durationSeconds,
         mazeSeed: this.mazeSeed,
         maze: this.maze,
         maxPlayers: this.maxPlayers,
         players: Array.from(this.players.values()).map(p => ({
           id: p.id,
           name: p.name,
-          class: p.class,
           color: p.color,
           status: p.status,
           currentCp: p.currentCp,
@@ -585,6 +687,9 @@ class CompetitionRoom {
           durationStr: p.durationStr,
           rank: p.rank,
           registrationTime: p.registrationTime,
+          progressPercentage: p.progressPercentage,
+          lastCompletedCheckpoint: p.lastCompletedCheckpoint,
+          progressTimestamp: p.progressTimestamp,
         })),
         leaderboard: this.getLeaderboardData(),
       };
@@ -610,14 +715,14 @@ class RoomManager {
     this.roomsByCode = new Map(); // roomCode (uppercase) -> CompetitionRoom
   }
 
-  createRoom() {
+  createRoom(durationSeconds = 300) {
     let code;
     do {
       code = generateRoomCode();
     } while (this.roomsByCode.has(code));
 
     const seed = Math.floor(100000 + Math.random() * 900000);
-    const room = new CompetitionRoom(code, seed);
+    const room = new CompetitionRoom(code, seed, durationSeconds);
     this.rooms.set(room.id, room);
     this.roomsByCode.set(code, room);
     room.persistSnapshot();
@@ -692,9 +797,11 @@ app.get('/api/admin/rooms', (req, res) => {
   });
 });
 
-// Admin Create Room
+// Admin Create Room — accepts optional durationSeconds in body
 app.post('/api/admin/rooms/create', (req, res) => {
-  const room = roomManager.createRoom();
+  const { durationSeconds } = req.body || {};
+  const dur = parseInt(durationSeconds, 10) || 300;
+  const room = roomManager.createRoom(dur);
   res.json({
     success: true,
     room: room.getSummary(),
@@ -715,7 +822,6 @@ app.get('/api/admin/rooms/:code', (req, res) => {
     players: Array.from(room.players.values()).map(p => ({
       id: p.id,
       name: p.name,
-      class: p.class,
       color: p.color,
       status: p.status,
       currentCp: p.currentCp,
@@ -725,6 +831,8 @@ app.get('/api/admin/rooms/:code', (req, res) => {
       durationStr: p.durationStr,
       connected: p.connected,
       score: p.score,
+      progressPercentage: p.progressPercentage || 0,
+      lastCompletedCheckpoint: p.lastCompletedCheckpoint,
     }))
   });
 });
@@ -748,6 +856,8 @@ app.post('/api/admin/rooms/:code/start', (req, res) => {
         type: 'ROOM_COMPETITION_STARTED',
         roomCode: room.code,
         startTime: room.startTime,
+        endTime: room.endTime,
+        durationSeconds: room.durationSeconds,
         serverTime: Date.now(),
       });
       broadcastRoomLeaderboard(room);
@@ -759,6 +869,8 @@ app.post('/api/admin/rooms/:code/start', (req, res) => {
     type: 'ROOM_START_COUNTDOWN',
     roomCode: room.code,
     roomStartTime: result.roomStartTime,
+    roomEndTime: result.roomEndTime,
+    durationSeconds: room.durationSeconds,
     serverTime: Date.now(),
     leaderboard: room.getLeaderboardData(),
   });
@@ -766,6 +878,8 @@ app.post('/api/admin/rooms/:code/start', (req, res) => {
   res.json({
     success: true,
     roomStartTime: result.roomStartTime,
+    roomEndTime: result.roomEndTime,
+    durationSeconds: room.durationSeconds,
     message: `COMPETITION STARTING IN ROOM ${room.code}`
   });
 });
@@ -832,19 +946,19 @@ app.post('/api/rooms/validate', (req, res) => {
   });
 });
 
-// Join Room
+// Join Room — class field is optional, not required
 app.post('/api/rooms/join', (req, res) => {
   const { name, playerClass, roomCode, token } = req.body || {};
   const cleanCode = (roomCode || '').toUpperCase().trim();
 
   if (!cleanCode) return res.status(400).json({ success: false, error: 'ROOM CODE REQUIRED' });
   if (!name || !name.trim()) return res.status(400).json({ success: false, error: 'NAME REQUIRED' });
-  if (!playerClass || !playerClass.trim()) return res.status(400).json({ success: false, error: 'CLASS REQUIRED' });
+  // playerClass is no longer required
 
   const room = roomManager.getRoomByCode(cleanCode);
   if (!room) return res.status(404).json({ success: false, error: 'INVALID ROOM CODE — ROOM NOT FOUND' });
 
-  const result = room.registerPlayer(name, playerClass, token);
+  const result = room.registerPlayer(name, playerClass || '', token);
   if (!result.success) {
     return res.status(400).json({ success: false, error: result.error });
   }
@@ -856,7 +970,6 @@ app.post('/api/rooms/join', (req, res) => {
       id: p.id,
       token: p.token,
       name: p.name,
-      class: p.class,
       color: p.color,
       status: p.status,
       currentCp: p.currentCp,
@@ -972,7 +1085,6 @@ wss.on('connection', (ws) => {
           .map(p => ({
             id: p.id,
             name: p.name,
-            class: p.class,
             color: p.color,
             status: p.status,
             x: p.x,
@@ -1043,7 +1155,7 @@ wss.on('connection', (ws) => {
         if (!ws.roomCode || !ws.playerId) return;
         const room = roomManager.getRoomByCode(ws.roomCode);
         if (!room) return;
-        room.handlePlayerCpClear(ws.playerId, data.cpIndex);
+        room.handlePlayerCpClear(ws.playerId, data.cpIndex, data.progressPercentage);
         broadcastRoomLeaderboard(room);
         return;
       }
@@ -1079,7 +1191,6 @@ wss.on('connection', (ws) => {
           player: {
             id: p.id,
             name: p.name,
-            class: p.class,
             durationMs: p.durationMs,
             durationStr: p.durationStr,
             rank: p.rank,
@@ -1096,7 +1207,6 @@ wss.on('connection', (ws) => {
           player: {
             id: p.id,
             name: p.name,
-            class: p.class,
             durationMs: p.durationMs,
             durationStr: p.durationStr,
             rank: p.rank,

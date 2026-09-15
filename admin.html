@@ -117,13 +117,8 @@
     }
 
     @keyframes pulse {
-      from {
-        opacity: 0.6;
-      }
-
-      to {
-        opacity: 1;
-      }
+      from { opacity: 0.6; }
+      to { opacity: 1; }
     }
 
     .stats-bar {
@@ -320,10 +315,6 @@
       font-size: 14px;
     }
 
-    .pclass {
-      color: var(--ck);
-    }
-
     .status-pill {
       font-family: var(--font-title);
       font-size: 8px;
@@ -333,41 +324,13 @@
       letter-spacing: 1px;
     }
 
-    .status-WAITING {
-      background: rgba(255, 215, 0, 0.15);
-      color: var(--ck);
-    }
-
-    .status-READY {
-      background: rgba(255, 136, 0, 0.15);
-      color: var(--co);
-    }
-
-    .status-PLAYING {
-      background: rgba(0, 245, 255, 0.15);
-      color: var(--cc);
-    }
-
-    .status-CHECKPOINT {
-      background: rgba(255, 0, 170, 0.15);
-      color: var(--cm);
-    }
-
-    .status-FINISHED {
-      background: rgba(57, 255, 20, 0.2);
-      color: var(--cg);
-      border: 1px solid var(--cg);
-    }
-
-    .status-DNF {
-      background: rgba(255, 34, 68, 0.15);
-      color: var(--cr);
-    }
-
-    .status-DISCONNECTED {
-      background: rgba(255, 255, 255, 0.1);
-      color: #888;
-    }
+    .status-WAITING { background: rgba(255, 215, 0, 0.15); color: var(--ck); }
+    .status-READY { background: rgba(255, 136, 0, 0.15); color: var(--co); }
+    .status-PLAYING { background: rgba(0, 245, 255, 0.15); color: var(--cc); }
+    .status-CHECKPOINT { background: rgba(255, 0, 170, 0.15); color: var(--cm); }
+    .status-FINISHED { background: rgba(57, 255, 20, 0.2); color: var(--cg); border: 1px solid var(--cg); }
+    .status-DNF { background: rgba(255, 34, 68, 0.15); color: var(--cr); }
+    .status-DISCONNECTED { background: rgba(255, 255, 255, 0.1); color: #888; }
 
     .time-val {
       font-family: var(--font-data);
@@ -397,13 +360,8 @@
       color: #000;
     }
 
-    .btn-small.red {
-      color: var(--cr);
-    }
-
-    .btn-small.cyan {
-      color: var(--cc);
-    }
+    .btn-small.red { color: var(--cr); }
+    .btn-small.cyan { color: var(--cc); }
 
     /* Room Detail Header Banner */
     .room-banner {
@@ -494,6 +452,129 @@
       display: none;
       letter-spacing: 1px;
     }
+
+    /* Create Room Modal */
+    #createRoomModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 8888;
+      backdrop-filter: blur(6px);
+    }
+    #createRoomModal.open { display: flex; }
+
+    .create-room-box {
+      background: var(--panel);
+      border: 2px solid var(--cc);
+      box-shadow: 0 0 50px rgba(0, 245, 255, 0.3);
+      padding: 32px 36px;
+      width: min(480px, 94%);
+      border-radius: 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .create-room-box h2 {
+      font-family: var(--font-title);
+      font-size: 13px;
+      color: var(--cc);
+      letter-spacing: 2px;
+    }
+
+    .cr-field {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .cr-label {
+      font-size: 9px;
+      color: var(--ck);
+      letter-spacing: 2px;
+    }
+
+    .cr-info {
+      font-size: 10px;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 1px;
+    }
+
+    .timer-select {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid var(--cp);
+      color: #fff;
+      font-family: var(--font-title);
+      font-size: 13px;
+      letter-spacing: 2px;
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .timer-select:focus, .timer-select:hover {
+      border-color: var(--cc);
+      box-shadow: 0 0 12px rgba(0, 245, 255, 0.4);
+    }
+
+    .timer-select option {
+      background: #0a0a20;
+      color: #fff;
+    }
+
+    /* Timer display in banner */
+    .timer-banner-box {
+      font-size: 10px;
+      color: rgba(255,255,255,0.7);
+      background: rgba(57,255,20,0.08);
+      border: 1px solid rgba(57,255,20,0.3);
+      padding: 8px 12px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .timer-banner-box.urgent {
+      border-color: var(--co);
+      color: var(--co);
+      animation: timerPulse 0.6s infinite alternate;
+    }
+
+    .timer-banner-box.critical {
+      border-color: var(--cr);
+      color: var(--cr);
+      animation: timerPulse 0.3s infinite alternate;
+    }
+
+    @keyframes timerPulse {
+      from { opacity: 0.7; box-shadow: none; }
+      to { opacity: 1; box-shadow: 0 0 12px currentColor; }
+    }
+
+    .progress-bar-wrap {
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      height: 6px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--cg);
+      border-radius: 4px;
+      transition: width 0.5s;
+    }
   </style>
 </head>
 
@@ -509,6 +590,36 @@
         <button class="btn primary" id="btnLogin" style="width:100%">AUTHENTICATE</button>
       </div>
       <div id="loginErr" class="login-err"></div>
+    </div>
+  </div>
+
+  <!-- Create Room Modal -->
+  <div id="createRoomModal">
+    <div class="create-room-box">
+      <h2>➕ CREATE COMPETITION ROOM</h2>
+
+      <div class="cr-field">
+        <div class="cr-label">ROOM CODE</div>
+        <div class="cr-info">Generated automatically upon creation</div>
+      </div>
+
+      <div class="cr-field">
+        <div class="cr-label">GAME TIMER</div>
+        <select id="timerSelect" class="timer-select">
+          <option value="60">01:00 — 1 Minute</option>
+          <option value="120">02:00 — 2 Minutes</option>
+          <option value="180">03:00 — 3 Minutes</option>
+          <option value="300" selected>05:00 — 5 Minutes</option>
+          <option value="600">10:00 — 10 Minutes</option>
+          <option value="900">15:00 — 15 Minutes</option>
+        </select>
+        <div class="cr-info">All players in this room share this competition deadline.</div>
+      </div>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+        <button class="btn primary" id="btnConfirmCreate">⚡ CREATE ROOM</button>
+        <button class="btn danger" id="btnCancelCreate">✕ CANCEL</button>
+      </div>
     </div>
   </div>
 
@@ -561,6 +672,7 @@
         <thead>
           <tr>
             <th>ROOM CODE</th>
+            <th>DURATION</th>
             <th>STATUS</th>
             <th>PLAYERS</th>
             <th>CREATED AT</th>
@@ -569,7 +681,7 @@
         </thead>
         <tbody id="roomsTableBody">
           <tr>
-            <td colspan="5" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">No rooms created yet.
+            <td colspan="6" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">No rooms created yet.
             </td>
           </tr>
         </tbody>
@@ -616,15 +728,20 @@
           <button class="btn gold" id="btnCopyCode" style="font-size:9px;padding:8px 14px">📋 COPY ROOM CODE</button>
         </div>
       </div>
-      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
         <div style="font-size:10px;color:rgba(255,255,255,0.7);background:rgba(0,245,255,0.08);border:1px solid rgba(0,245,255,0.3);padding:8px 12px;border-radius:4px;letter-spacing:1px">
           MAZE: <strong style="color:var(--cg)">GENERATED</strong>
         </div>
         <div style="font-size:10px;color:rgba(255,255,255,0.7);background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);padding:8px 12px;border-radius:4px;letter-spacing:1px">
-          MAZE SEED: <strong id="bannerMazeSeed" style="color:var(--ck)">—</strong>
+          SEED: <strong id="bannerMazeSeed" style="color:var(--ck)">—</strong>
         </div>
         <div style="font-size:10px;color:rgba(255,255,255,0.7);background:rgba(123,47,255,0.08);border:1px solid rgba(123,47,255,0.3);padding:8px 12px;border-radius:4px;letter-spacing:1px">
-          CHECKPOINTS: <strong id="bannerCheckpoints" style="color:var(--cc)">5</strong>
+          CPS: <strong id="bannerCheckpoints" style="color:var(--cc)">5</strong>
+        </div>
+        <!-- Game Timer display -->
+        <div id="bannerTimerBox" class="timer-banner-box">
+          <div style="font-size:8px;opacity:0.6;margin-bottom:3px">GAME TIMER</div>
+          <div id="bannerTimerVal" style="font-family:var(--font-title);font-size:14px">--:--</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
           <div id="bannerRoomStatus" class="badge-state WAITING">WAITING</div>
@@ -645,7 +762,7 @@
     <!-- Live Participants Table in Room -->
     <section class="table-panel">
       <div class="panel-hdr">
-        <h2>ROOM PARTICIPANTS & LIVE LEADERBOARD</h2>
+        <h2>ROOM PARTICIPANTS &amp; LIVE LEADERBOARD</h2>
         <button id="btnRefreshRoomDetail" class="btn-small cyan">REFRESH</button>
       </div>
       <table>
@@ -653,18 +770,16 @@
           <tr>
             <th style="width:60px">RANK</th>
             <th>NAME</th>
-            <th>CLASS</th>
             <th>STATUS</th>
-            <th>CHECKPOINTS</th>
-            <th>ATTEMPTS</th>
+            <th>CHECKPOINT</th>
+            <th>PROGRESS</th>
             <th>OFFICIAL TIME</th>
-            <th>SCORE</th>
             <th style="text-align:right">ACTION</th>
           </tr>
         </thead>
         <tbody id="roomPlayersBody">
           <tr>
-            <td colspan="9" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">Waiting for
+            <td colspan="7" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">Waiting for
               participants...</td>
           </tr>
         </tbody>
@@ -675,7 +790,7 @@
   <script>
     'use strict';
 
-    // Resolve backend API URL safely (handles http://localhost:3000, 127.0.0.1, or file://)
+    // Resolve backend API URL safely
     const API_BASE = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
       ? window.location.origin
       : 'http://localhost:3000';
@@ -683,6 +798,7 @@
     let adminToken = sessionStorage.getItem('neon_admin_token') || null;
     let currentViewingRoomCode = null;
     let ws = null;
+    let roomTimerInterval = null; // For live countdown in room detail view
 
     // Clock
     setInterval(() => {
@@ -704,8 +820,14 @@
     const btnEndRoom = document.getElementById('btnEndRoom');
     const roomCtrlMsg = document.getElementById('roomCtrlMsg');
 
+    // Create Room Modal elements
+    const createRoomModal = document.getElementById('createRoomModal');
+    const timerSelect = document.getElementById('timerSelect');
+    const btnConfirmCreate = document.getElementById('btnConfirmCreate');
+    const btnCancelCreate = document.getElementById('btnCancelCreate');
+
     /* ══════════════════════════════════════════════
-       1. AUTHENTICATE BUTTON (REST + VISUAL STATES)
+       1. AUTHENTICATE BUTTON
     ══════════════════════════════════════════════ */
     async function performAuth() {
       const pass = passInput.value.trim();
@@ -718,7 +840,6 @@
         return;
       }
 
-      // Visual Loading State
       btnLogin.disabled = true;
       btnLogin.textContent = 'AUTHENTICATING...';
 
@@ -759,7 +880,6 @@
     btnLogin.onclick = performAuth;
     passInput.addEventListener('keydown', e => { if (e.key === 'Enter') performAuth(); });
 
-    // Auto-login check
     if (adminToken) {
       loginModal.style.display = 'none';
       initWebSocket();
@@ -793,7 +913,6 @@
     }
 
     function handleWSMessage(msg) {
-      // If current room received an update
       if (currentViewingRoomCode && msg.roomCode === currentViewingRoomCode) {
         if (msg.type === 'ROOM_LEADERBOARD_UPDATE' || msg.type === 'ROOM_PLAYER_FINISHED') {
           if (msg.summary) updateRoomBanner(msg.summary);
@@ -804,12 +923,13 @@
         }
         if (msg.type === 'ROOM_COMPETITION_STARTED') {
           updateRoomStatus('STARTED');
+          loadRoomDetails(currentViewingRoomCode);
         }
         if (msg.type === 'ROOM_COMPLETED') {
           updateRoomStatus('FINISHED');
+          loadRoomDetails(currentViewingRoomCode);
         }
       }
-      // If we are on the rooms list, refresh list occasionally
       if (!currentViewingRoomCode && (msg.type === 'ROOM_LEADERBOARD_UPDATE' || msg.type === 'ROOM_COMPLETED')) {
         loadRoomsList();
       }
@@ -841,15 +961,17 @@
     function renderRoomsTable(rooms) {
       const tbody = document.getElementById('roomsTableBody');
       if (!rooms || rooms.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">No competition rooms created yet. Click "＋ CREATE NEW ROOM" above.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">No competition rooms created yet. Click "＋ CREATE NEW ROOM" above.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = rooms.map(r => {
         const dateStr = new Date(r.createdAt).toLocaleTimeString();
+        const durStr = r.durationStr || '--';
         return `
       <tr>
         <td><strong class="room-code-tag">${r.roomCode}</strong></td>
+        <td><span style="color:var(--cg);font-family:var(--font-title);font-size:11px">⏱ ${durStr}</span></td>
         <td><span class="badge-state ${r.status}">${r.status}</span></td>
         <td><strong style="color:var(--cc)">${r.totalPlayers}</strong> / ${r.maxPlayers || 50}</td>
         <td style="color:rgba(255,255,255,0.6)">${dateStr}</td>
@@ -861,32 +983,47 @@
       }).join('');
     }
 
-    // Create New Room Button (with loading feedback)
-    btnCreateRoom.onclick = async () => {
-      btnCreateRoom.disabled = true;
-      btnCreateRoom.textContent = 'CREATING ROOM...';
+    // Create Room Button — opens modal
+    btnCreateRoom.onclick = () => {
+      createRoomModal.classList.add('open');
+      timerSelect.focus();
+    };
+
+    btnCancelCreate.onclick = () => {
+      createRoomModal.classList.remove('open');
+    };
+
+    btnConfirmCreate.onclick = async () => {
+      const durationSeconds = parseInt(timerSelect.value, 10) || 300;
+      btnConfirmCreate.disabled = true;
+      btnConfirmCreate.textContent = 'CREATING ROOM...';
 
       try {
-        const res = await fetch(`${API_BASE}/api/admin/rooms/create`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/api/admin/rooms/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ durationSeconds })
+        });
         const data = await res.json();
 
         if (res.ok && data.success) {
-          btnCreateRoom.textContent = 'ROOM CREATED!';
+          btnConfirmCreate.textContent = 'ROOM CREATED!';
+          createRoomModal.classList.remove('open');
           setTimeout(() => {
-            btnCreateRoom.disabled = false;
-            btnCreateRoom.textContent = '＋ CREATE NEW ROOM';
+            btnConfirmCreate.disabled = false;
+            btnConfirmCreate.textContent = '⚡ CREATE ROOM';
             openRoomDetail(data.room.roomCode);
-          }, 500);
+          }, 400);
         } else {
           alert('Failed to create room: ' + (data.error || 'Unknown error'));
-          btnCreateRoom.disabled = false;
-          btnCreateRoom.textContent = '＋ CREATE NEW ROOM';
+          btnConfirmCreate.disabled = false;
+          btnConfirmCreate.textContent = '⚡ CREATE ROOM';
         }
       } catch (err) {
         console.error('Create room error:', err);
         alert('Server error creating room');
-        btnCreateRoom.disabled = false;
-        btnCreateRoom.textContent = '＋ CREATE NEW ROOM';
+        btnConfirmCreate.disabled = false;
+        btnConfirmCreate.textContent = '⚡ CREATE ROOM';
       }
     };
 
@@ -908,6 +1045,7 @@
 
     btnBackToRooms.onclick = () => {
       currentViewingRoomCode = null;
+      stopRoomTimerCountdown();
       viewRoomDetail.style.display = 'none';
       viewRoomsList.style.display = 'block';
       loadRoomsList();
@@ -938,6 +1076,45 @@
       }
     }
 
+    // Store current room endTime for countdown
+    let currentRoomEndTime = null;
+
+    function startRoomTimerCountdown(endTime) {
+      stopRoomTimerCountdown();
+      currentRoomEndTime = endTime;
+      updateRoomTimerDisplay();
+      roomTimerInterval = setInterval(updateRoomTimerDisplay, 1000);
+    }
+
+    function stopRoomTimerCountdown() {
+      if (roomTimerInterval) {
+        clearInterval(roomTimerInterval);
+        roomTimerInterval = null;
+      }
+    }
+
+    function updateRoomTimerDisplay() {
+      const box = document.getElementById('bannerTimerBox');
+      const val = document.getElementById('bannerTimerVal');
+      if (!currentRoomEndTime) return;
+
+      const remaining = Math.max(0, currentRoomEndTime - Date.now());
+      const secs = Math.ceil(remaining / 1000);
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      val.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+      box.className = 'timer-banner-box';
+      if (remaining === 0) {
+        val.textContent = '00:00';
+        stopRoomTimerCountdown();
+      } else if (secs <= 10) {
+        box.classList.add('critical');
+      } else if (secs <= 30) {
+        box.classList.add('urgent');
+      }
+    }
+
     function updateRoomBanner(room) {
       document.getElementById('bannerPlayerCount').textContent = room.totalPlayers || 0;
       if (document.getElementById('bannerMazeSeed')) {
@@ -948,24 +1125,42 @@
       }
       updateRoomStatus(room.status);
 
+      // Update timer display
+      const timerBox = document.getElementById('bannerTimerBox');
+      const timerVal = document.getElementById('bannerTimerVal');
+      if (room.status === 'STARTED' && room.endTime) {
+        startRoomTimerCountdown(room.endTime);
+      } else if (room.status === 'FINISHED') {
+        stopRoomTimerCountdown();
+        timerVal.textContent = '00:00';
+        timerBox.className = 'timer-banner-box';
+      } else {
+        // Waiting — show configured duration
+        stopRoomTimerCountdown();
+        timerVal.textContent = room.durationStr || '--:--';
+        timerBox.className = 'timer-banner-box';
+      }
+
       // Configure controls based on room status
       if (room.status === 'STARTED') {
         btnStartRoom.disabled = true;
         btnStartRoom.textContent = 'RUNNING';
         btnEndRoom.disabled = false;
+        roomCtrlMsg.textContent = `Time remaining: ${room.timeRemainingStr || '--'}`;
       } else if (room.status === 'FINISHED' || room.status === 'CLOSED') {
         btnStartRoom.disabled = true;
         btnStartRoom.textContent = 'COMPLETED';
         btnEndRoom.disabled = true;
+        roomCtrlMsg.textContent = 'Competition complete.';
       } else {
         // WAITING or READY
         btnStartRoom.disabled = (room.totalPlayers === 0);
         btnStartRoom.textContent = '▶ START COMPETITION';
         btnEndRoom.disabled = true;
         if (room.totalPlayers === 0) {
-          roomCtrlMsg.textContent = 'Waiting for players to join with room code...';
+          roomCtrlMsg.textContent = `Waiting for players · Timer: ${room.durationStr || '--'}`;
         } else {
-          roomCtrlMsg.textContent = `${room.totalPlayers} player(s) ready to start!`;
+          roomCtrlMsg.textContent = `${room.totalPlayers} player(s) ready · Timer: ${room.durationStr || '--'}`;
         }
       }
     }
@@ -979,7 +1174,7 @@
     function renderRoomPlayers(players) {
       const tbody = document.getElementById('roomPlayersBody');
       if (!players || players.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">Waiting for participants...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">Waiting for participants...</td></tr>`;
         return;
       }
 
@@ -996,6 +1191,12 @@
 
         const colorDot = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${p.color || '#00f5ff'};box-shadow:0 0 6px ${p.color || '#00f5ff'};margin-right:6px;vertical-align:middle"></span>`;
 
+        const progress = p.status === 'FINISHED'
+          ? `<span style="color:var(--cg)">100%</span>`
+          : `<span style="color:var(--cc)">${Math.round(p.progressPercentage || 0)}%</span>`;
+
+        const cpDisplay = `${p.currentCp || 0} / 5`;
+
         return `
       <tr>
         <td>${rankBadge}</td>
@@ -1003,12 +1204,15 @@
           <div class="pname">${colorDot}${escapeHtml(p.name)}</div>
           <div style="font-size:10px;color:${p.connected ? '#39ff14' : '#888'}">${p.connected ? '● CONNECTED' : '○ DISCONNECTED'}</div>
         </td>
-        <td><span class="pclass">${escapeHtml(p.class)}</span></td>
         <td>${statusPill}</td>
-        <td>${p.currentCp || 0} / 5</td>
-        <td>${p.attempts || 1}</td>
+        <td>${cpDisplay}</td>
+        <td>
+          ${progress}
+          <div style="margin-top:4px">
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${Math.round(p.progressPercentage || 0)}%"></div></div>
+          </div>
+        </td>
         <td>${duration}</td>
-        <td>${p.score || 0}</td>
         <td style="text-align:right">
           <button class="btn-small red" onclick="kickPlayerFromRoom('${p.id}')">KICK</button>
         </td>
@@ -1056,6 +1260,9 @@
         if (res.ok && data.success) {
           btnStartRoom.textContent = 'COUNTDOWN STARTED!';
           updateRoomStatus('READY');
+          if (data.roomEndTime) {
+            startRoomTimerCountdown(data.roomEndTime);
+          }
           setTimeout(() => {
             btnStartRoom.textContent = 'RUNNING';
             updateRoomStatus('STARTED');
@@ -1088,6 +1295,7 @@
 
         if (res.ok && data.success) {
           btnEndRoom.textContent = 'ENDED';
+          stopRoomTimerCountdown();
           updateRoomStatus('FINISHED');
           loadRoomDetails(currentViewingRoomCode);
         } else {

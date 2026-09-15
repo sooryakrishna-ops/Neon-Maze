@@ -111,6 +111,11 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .hl{font-size:7px;color:rgba(255,255,255,.38);letter-spacing:2px}
 .hv{font-size:clamp(10px,1.3vw,13px);color:var(--cc);text-shadow:0 0 8px var(--cc);letter-spacing:2px;font-family:var(--font-mono);font-weight:bold}
 #htimer{min-width:76px;text-align:center}
+/* Timer urgency states */
+#htimer.warn{color:var(--co)!important;text-shadow:0 0 10px var(--co)!important;animation:timerWarn 0.6s infinite alternate}
+#htimer.crit{color:var(--cr)!important;text-shadow:0 0 12px var(--cr)!important;animation:timerCrit 0.28s infinite alternate}
+@keyframes timerWarn{from{opacity:.75;transform:scale(1)}to{opacity:1;transform:scale(1.04)}}
+@keyframes timerCrit{from{opacity:.7;transform:scale(1)}to{opacity:1;transform:scale(1.08)}}
 .cpdot{display:inline-block;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);margin:0 2px;transition:all .35s}
 .cpdot.done{background:var(--cg);border-color:var(--cg);box-shadow:0 0 7px var(--cg)}
 .cpdot.cur{background:var(--ck);border-color:var(--ck);box-shadow:0 0 7px var(--ck);animation:adot .7s infinite alternate}
@@ -331,7 +336,7 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
   </div>
 </div>
 
-<!-- SCREEN 2: JOIN ROOM REGISTRATION (Requirement #15: NAME, CLASS, ROOM CODE, JOIN ROOM) -->
+<!-- SCREEN 2: JOIN ROOM REGISTRATION — NAME + ROOM CODE only -->
 <div id="sreg" class="screen">
   <div class="reg-panel">
     <div class="gtitle" style="font-size:clamp(16px,2.5vw,22px)">NEON MAZE</div>
@@ -340,10 +345,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
     <div class="form-group">
       <label class="form-label" for="regName">NAME</label>
       <input type="text" id="regName" class="form-input" placeholder="YOUR FULL NAME" maxlength="24" autocomplete="off">
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="regClass">CLASS</label>
-      <input type="text" id="regClass" class="form-input" placeholder="YOUR CLASS" maxlength="20" autocomplete="off">
     </div>
     <div class="form-group">
       <label class="form-label" for="regRoom">ROOM CODE</label>
@@ -357,7 +358,7 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
   </div>
 </div>
 
-<!-- SCREEN 3: PLAYER WAITING ROOM (Requirement #17: NEON MAZE ROOM [CODE], PLAYER, CLASS, PLAYERS IN ROOM, STATUS) -->
+<!-- SCREEN 3: PLAYER WAITING ROOM -->
 <div id="swait" class="screen">
   <div class="wait-panel">
     <div class="wait-title" id="waitRoomHeader">NEON MAZE · WAITING ROOM</div>
@@ -368,8 +369,8 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
         <div class="wait-val" id="waitPlrName">--</div>
       </div>
       <div class="wait-card">
-        <div class="wait-lbl">CLASS</div>
-        <div class="wait-val" id="waitPlrClass">--</div>
+        <div class="wait-lbl">ROOM CODE</div>
+        <div class="wait-val" id="waitRoomCodeVal" style="color:var(--ck)">--</div>
       </div>
     </div>
     <div class="wait-card" style="width:100%">
@@ -456,8 +457,8 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
   <div class="arcade-container">
     <div id="hud">
       <div class="hs">
-        <div class="hl">ROOM TIME</div>
-        <div class="hv" id="htimer">00:00.00</div>
+        <div class="hl">TIME LEFT</div>
+        <div class="hv" id="htimer">00:00</div>
       </div>
       <div class="hs">
         <div class="hl">CHECKPOINTS</div>
@@ -523,7 +524,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
     <div style="font-size:8px;color:rgba(255,255,255,.5);margin-top:-8px">OFFICIAL ROOM RESULT RECORDED</div>
     <div class="stats" style="min-width:300px">
       <div class="srow"><span class="sl">PLAYER</span><span class="sv" id="vcPlr">--</span></div>
-      <div class="srow"><span class="sl">CLASS</span><span class="sv" id="vcClass">--</span></div>
       <div class="srow"><span class="sl">ROOM CODE</span><span class="sv" id="vcRoom" style="color:var(--ck)">--</span></div>
       <div class="srow"><span class="sl">OFFICIAL TIME</span><span class="sv" id="vctm" style="color:var(--cg);font-weight:bold;font-size:12px">00:00.00</span></div>
       <div class="srow"><span class="sl">CURRENT RANK</span><span class="sv" id="vcRank" style="color:var(--ck);font-weight:bold">#--</span></div>
@@ -567,13 +567,14 @@ const API_BASE = (window.location.protocol === 'http:' || window.location.protoc
    CHECKPOINT CONFIG & DIFFICULTY TUNING
    Calibrated reaction window (~1.1s to ~1.8s) across large playable area
 ══════════════════════════════════════════════ */
+// CHECKPOINT_CONFIG — speeds reduced ~25% from original, gentle 3-4% increments per level
 const CHECKPOINT_CONFIG = {
   levels: [
-    { cp: 1, targetFallSpeed: 125, targetGravity: 95,  spawnInterval: 0.95, maxSimultaneousTargets: 2, bombChance: 0.12, vxRange: 35 },
-    { cp: 2, targetFallSpeed: 150, targetGravity: 115, spawnInterval: 0.80, maxSimultaneousTargets: 3, bombChance: 0.16, vxRange: 45 },
-    { cp: 3, targetFallSpeed: 175, targetGravity: 135, spawnInterval: 0.68, maxSimultaneousTargets: 4, bombChance: 0.22, vxRange: 60 },
-    { cp: 4, targetFallSpeed: 205, targetGravity: 155, spawnInterval: 0.58, maxSimultaneousTargets: 5, bombChance: 0.28, vxRange: 75 },
-    { cp: 5, targetFallSpeed: 235, targetGravity: 180, spawnInterval: 0.50, maxSimultaneousTargets: 6, bombChance: 0.32, vxRange: 90 },
+    { cp: 1, targetFallSpeed: 94,  targetGravity: 71,  spawnInterval: 1.10, maxSimultaneousTargets: 2, bombChance: 0.12, vxRange: 28 },
+    { cp: 2, targetFallSpeed: 100, targetGravity: 76,  spawnInterval: 0.98, maxSimultaneousTargets: 3, bombChance: 0.16, vxRange: 34 },
+    { cp: 3, targetFallSpeed: 107, targetGravity: 81,  spawnInterval: 0.86, maxSimultaneousTargets: 4, bombChance: 0.22, vxRange: 42 },
+    { cp: 4, targetFallSpeed: 114, targetGravity: 87,  spawnInterval: 0.76, maxSimultaneousTargets: 5, bombChance: 0.26, vxRange: 52 },
+    { cp: 5, targetFallSpeed: 122, targetGravity: 93,  spawnInterval: 0.66, maxSimultaneousTargets: 6, bombChance: 0.30, vxRange: 62 },
   ],
   targetWidth: 56,
   targetHeight: 56,
@@ -753,6 +754,8 @@ let G={
   // Server-authoritative room clock
   serverTimeOffset:0,
   roomStartTime:null,
+  roomEndTime:null,       // Server-authoritative competition deadline
+  roomDurationSeconds:300,
   elapsedTimeMs:0,
   timerRunning:false,
   // Avatar scale penalty for wrong keys
@@ -765,7 +768,6 @@ let G={
   playerId: null,
   playerToken: null,
   playerName: '',
-  playerClass: '',
   playerColor: '#00f5ff',
   roomCode: '',
   retries: 0,
@@ -775,6 +777,12 @@ let G={
   // FX
   shakeX:0,shakeY:0,shakeI:0,shakeT:0,
   flashA:0,flashC:'#fff',
+  // Checkpoint respawn tracking
+  lastCompletedCheckpoint: -1,       // -1 = none (start)
+  lastCompletedCheckpointPos: null,  // { c, r }
+  safeRespawnUntil: 0,               // performance.now() timestamp until safe
+  // Progress tracking
+  progressPercentage: 0,
 };
 let animId=null,lastTs=null;
 
@@ -876,6 +884,14 @@ function flash(col='#fff',a=.55){G.flashA=a;G.flashC=col}
 function shake(i=6,ms=400){G.shakeI=i;G.shakeT=ms/1000}
 
 function formatTimeMs(ms){
+  if(ms<=0||isNaN(ms))return '00:00';
+  const totalSeconds=Math.ceil(ms/1000);
+  const m=Math.floor(totalSeconds/60);
+  const s=totalSeconds%60;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function formatElapsed(ms){
   if(ms<=0||isNaN(ms))return '00:00.00';
   const totalSeconds=ms/1000;
   const m=Math.floor(totalSeconds/60);
@@ -886,7 +902,22 @@ function formatTimeMs(ms){
 
 function updHUD(){
   const tel=document.getElementById('htimer');
-  tel.textContent=formatTimeMs(G.elapsedTimeMs);
+  // Show countdown: remaining time until roomEndTime
+  if(G.roomEndTime && G.timerRunning){
+    const remaining = Math.max(0, G.roomEndTime - Date.now());
+    tel.textContent = formatTimeMs(remaining);
+    tel.classList.remove('warn','crit');
+    if(remaining <= 10000) tel.classList.add('crit');
+    else if(remaining <= 30000) tel.classList.add('warn');
+  } else if(G.roomEndTime && G.state !== 'MENU'){
+    tel.textContent = '00:00';
+    tel.classList.remove('warn','crit');
+  } else {
+    // Not started yet — show configured duration
+    tel.classList.remove('warn','crit');
+    const dur = G.roomDurationSeconds || 300;
+    tel.textContent = formatTimeMs(dur * 1000);
+  }
 
   const cpEl=document.getElementById('hcps');cpEl.innerHTML='';
   G.cps.forEach((cp,i)=>{
@@ -966,6 +997,24 @@ function resetPlayer(){
   clampCam();
 }
 
+// Respawn player at their last completed checkpoint (or start if none)
+function respawnAtLastCheckpoint(){
+  const p=G.plr;
+  const pos = G.lastCompletedCheckpointPos || { c:1, r:1 };
+  p.c=pos.c; p.r=pos.r; p.pc=pos.c; p.pr=pos.r;
+  p.t=1; p.dc=0; p.dr=0; p.sliding=false; p.bumpT=0;
+  G.bumpCd=0; G.trail=[];
+  G.playerScale=1.0;
+  G.targetScale=1.0;
+  G.wrongKeyMistakes=0;
+  // Brief safe period: ignore spikes and checkpoint re-trigger for 750ms
+  G.safeRespawnUntil = performance.now() + 750;
+  const px=plrPx();
+  G.camX=px.x-canvas.width/2;
+  G.camY=px.y-canvas.height/2;
+  clampCam();
+}
+
 function plrPx(){
   const p=G.plr,cs=CFG.CS;
   const x=(p.pc+(p.c-p.pc)*p.t+0.5)*cs;
@@ -1026,6 +1075,9 @@ function continueSlide(){
 
 function onCellEvent(c,r){
   if(G.state!=='MAZE')return;
+  // Safe respawn period: skip collision detection temporarily
+  if(performance.now() < G.safeRespawnUntil) return;
+
   const sp=G.spks.find(s=>s.c===c&&s.r===r&&s.phase==='act');
   if(sp){onSpikeHit();return}
 
@@ -1400,6 +1452,14 @@ function cpSuccess(){
   G.playerScale=1.0;
   G.wrongKeyMistakes=0;
 
+  // Track last completed checkpoint for respawn
+  G.lastCompletedCheckpoint = G.cpIdx;
+  G.lastCompletedCheckpointPos = { c: G.cps[G.cpIdx].c, r: G.cps[G.cpIdx].r };
+
+  // Compute progress percentage (checkpoint-based)
+  const fracs = [0.18, 0.38, 0.58, 0.78, 0.90, 1.0];
+  G.progressPercentage = Math.round(fracs[G.cpIdx] * 100);
+
   const pos=plrPx();
   Ptcl.emit(pos.x,pos.y,'#ffd700',30,{spd:160,sv:80,dc:.022,sz:4,up:110});
   const allDone=G.cps.every(c=>c.done);
@@ -1411,7 +1471,8 @@ function cpSuccess(){
   `;
   area.appendChild(res);
 
-  sendWS({ type: 'CHECKPOINT_CLEAR', cpIndex: G.cpIdx });
+  // Notify server — include progress percentage
+  sendWS({ type: 'CHECKPOINT_CLEAR', cpIndex: G.cpIdx, progressPercentage: G.progressPercentage });
 
   setTimeout(()=>{
     document.getElementById('cpo').classList.remove('on');
@@ -1431,11 +1492,15 @@ function cpFail(){
   G.playerScale=1.0;
   G.wrongKeyMistakes=0;
 
+  const cpName = G.lastCompletedCheckpoint >= 0
+    ? `CHECKPOINT ${G.lastCompletedCheckpoint + 1}`
+    : 'START';
+
   const area=document.getElementById('mgarea');
   const res=document.createElement('div');res.className='mgresult';
   res.innerHTML=`
     <div class="mgrtit" style="color:var(--cr);text-shadow:0 0 14px var(--cr)">✗ CHECKPOINT FAILED</div>
-    <div class="mgrsub">3 lives lost.<br>Maze attempt reset.<br>Room competition clock continues!</div>
+    <div class="mgrsub">3 lives lost.<br>Returning to ${cpName}...<br>Room competition clock continues!</div>
   `;
   area.appendChild(res);
 
@@ -1444,14 +1509,45 @@ function cpFail(){
   setTimeout(()=>{
     document.getElementById('cpo').classList.remove('on');
     G.retries++;
-    resetAttempt();
+    // Only reset spike timers; keep completed checkpoints intact
+    G.spks.forEach((sp,i)=>{sp.phase='safe';sp.timer=i*CFG.SSTAG;sp.prog=0});
+    Ptcl.list=[];G.trail=[];
+    respawnAtLastCheckpoint();
+    notif(`RETURNED TO ${cpName}`,'o',1800);
+    setTimeout(()=>{
+      G.state='MAZE';
+      updHUD();
+    }, 400);
   }, 1900);
 }
 
 function updTimer(){
-  if(!G.timerRunning || !G.roomStartTime) return;
+  if(!G.timerRunning || !G.roomEndTime) return;
   const nowEst = performance.now() + G.serverTimeOffset;
-  G.elapsedTimeMs = Math.max(0, nowEst - G.roomStartTime);
+  const serverNow = Date.now();
+  const remainingMs = Math.max(0, G.roomEndTime - serverNow);
+  G.elapsedTimeMs = remainingMs;
+
+  // Apply urgency classes to timer element
+  const tel = document.getElementById('htimer');
+  if(tel){
+    tel.classList.remove('warn','crit');
+    if(remainingMs <= 10000) tel.classList.add('crit');
+    else if(remainingMs <= 30000) tel.classList.add('warn');
+  }
+
+  // Auto-end when timer hits zero (server will also send ROOM_COMPLETED)
+  if(remainingMs <= 0 && G.state !== 'COMPLETED'){
+    onTimerExpired();
+  }
+}
+
+function onTimerExpired(){
+  if(G.state === 'COMPLETED' || G.state === 'VICTORY') return;
+  G.timerRunning = false;
+  notif('⏰ TIME UP!', 'r', 3000);
+  flash('#ff2244', 0.5);
+  // Server will send ROOM_COMPLETED which will trigger the final screen
 }
 
 function onVictory(){
@@ -1464,14 +1560,16 @@ function onVictory(){
   Ptcl.emit(pos.x,pos.y,'#ff00aa',40,{spd:200,sv:100,dc:.018,sz:5});
   Ptcl.emit(pos.x,pos.y,'#ffd700',30,{spd:150,sv:80,dc:.022,sz:4});
 
-  const tSec = G.elapsedTimeMs / 1000;
+  // Compute elapsed time from roomStartTime
+  const now = Date.now();
+  const elapsed = G.roomStartTime ? Math.max(0, now - G.roomStartTime) : 0;
+  const tSec = elapsed / 1000;
   const timeBonus = Math.max(0, Math.round(Math.max(0, 300 - tSec) * 15));
   const sc = Math.max(0, CFG.SB + timeBonus + 5 * CFG.SCB - G.retries * CFG.SRP);
 
   document.getElementById('vcPlr').textContent = G.playerName;
-  document.getElementById('vcClass').textContent = G.playerClass;
   document.getElementById('vcRoom').textContent = G.roomCode;
-  document.getElementById('vctm').textContent = formatTimeMs(G.elapsedTimeMs);
+  document.getElementById('vctm').textContent = formatTimeMs(elapsed);
   document.getElementById('vcsc').textContent = sc.toLocaleString();
 
   sendWS({ type: 'PLAYER_FINISH', score: sc });
@@ -1944,6 +2042,8 @@ function handleWSMessage(msg){
   // Room-Scoped Synchronized Start Countdown
   if(msg.type==='ROOM_START_COUNTDOWN'){
     if(msg.roomCode !== G.roomCode) return; // Ignore other rooms
+    G.roomEndTime = msg.roomEndTime || null;
+    G.roomDurationSeconds = msg.durationSeconds || 300;
     handleSynchronizedCountdown(msg.roomStartTime);
     if(msg.leaderboard) renderLiveLeaderboard(msg.leaderboard);
     return;
@@ -1952,8 +2052,10 @@ function handleWSMessage(msg){
   // Room Competition Started
   if(msg.type==='ROOM_COMPETITION_STARTED'){
     if(msg.roomCode !== G.roomCode) return;
+    G.roomEndTime = msg.endTime || null;
+    G.roomDurationSeconds = msg.durationSeconds || 300;
     if(G.state==='COUNTDOWN'){
-      startCompetitionRun(msg.startTime);
+      startCompetitionRun(msg.startTime, msg.endTime);
     }
     return;
   }
@@ -1961,7 +2063,7 @@ function handleWSMessage(msg){
   // Player in room finished announcement
   if(msg.type==='ROOM_PLAYER_FINISHED'){
     if(msg.roomCode !== G.roomCode) return;
-    notif(`★ ${msg.player.name} (${msg.player.class}) FINISHED! ${msg.player.durationStr}`,'k',3000);
+    notif(`★ ${msg.player.name} FINISHED! ${msg.player.durationStr}`,'k',3000);
     if(msg.leaderboard) renderLiveLeaderboard(msg.leaderboard);
     return;
   }
@@ -2047,8 +2149,9 @@ function handleSynchronizedCountdown(startServerTime){
   }, 30);
 }
 
-function startCompetitionRun(startServerTime){
+function startCompetitionRun(startServerTime, endServerTime){
   G.roomStartTime=startServerTime||(performance.now()+G.serverTimeOffset);
+  if(endServerTime) G.roomEndTime = endServerTime;
   G.state='MAZE';
   G.timerRunning=true;
   updHUD();
@@ -2069,7 +2172,7 @@ function renderWaitingRoster(players){
     const col=p.color || '#00f5ff';
     return `<div class="player-pill ${isSelf?'self':''}" style="border-color:${col}">
       <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${col};box-shadow:0 0 5px ${col}"></span>
-      ${idx+1}. <strong style="color:${col}">${escapeHtml(p.name)}</strong> (${escapeHtml(p.class)}) ${isSelf?'★':''}
+      ${idx+1}. <strong style="color:${col}">${escapeHtml(p.name)}</strong> ${isSelf?'★':''}
     </div>`;
   }).join('');
 }
@@ -2086,6 +2189,7 @@ function renderLiveLeaderboard(players){
   listEl.innerHTML=players.map((p, idx)=>{
     const isSelf=p.id===G.playerId;
     const isFinished=p.status==='FINISHED';
+    const isDNF=p.status==='DNF';
     const rankNum=p.rank||idx+1;
     const col=p.color || '#00f5ff';
 
@@ -2095,7 +2199,13 @@ function renderLiveLeaderboard(players){
     else if(rankNum===2 && isFinished){rankStr='🥈 2'}
     else if(rankNum===3 && isFinished){rankStr='🥉 3'}
 
-    const timeStr=isFinished?(p.durationStr||formatTimeMs(p.durationMs)):'--';
+    let timeOrProgress;
+    if(isFinished){
+      timeOrProgress = `<span class="lb-time">${p.durationStr||formatElapsed(p.durationMs)}</span>`;
+    } else {
+      const prog = Math.round(p.progressPercentage || 0);
+      timeOrProgress = `<span style="font-family:var(--font-mono);font-size:9px;color:var(--co)">${prog}% · CP${p.currentCp||0}/5</span>`;
+    }
 
     return `
       <div class="lb-item ${isSelf?'self':''} ${rankCls}">
@@ -2105,11 +2215,11 @@ function renderLiveLeaderboard(players){
             <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};box-shadow:0 0 5px ${col};margin-right:4px;vertical-align:middle"></span>
             ${escapeHtml(p.name)} ${isSelf?'<span style="color:var(--ck)">(YOU)</span>':''}
           </div>
-          <div class="lb-class">${escapeHtml(p.class)} · CP ${p.currentCp||0}/5</div>
+          <div class="lb-class">CP ${p.currentCp||0}/5</div>
         </div>
         <div class="lb-status-col">
           <span class="lb-status ${p.status}">${p.status}</span>
-          <span class="lb-time">${timeStr}</span>
+          ${timeOrProgress}
         </div>
       </div>
     `;
@@ -2120,33 +2230,64 @@ function renderFinalLeaderboard(players){
   const el=document.getElementById('finalLbList');
   if(!el||!players)return;
 
-  el.innerHTML=players.map((p, idx)=>{
+  // Find the winner
+  const winner = players[0];
+  const someoneFinished = winner && winner.status === 'FINISHED';
+
+  // Winner announcement block
+  let winnerHtml = '';
+  if(winner){
+    if(someoneFinished){
+      winnerHtml = `
+        <div style="background:rgba(57,255,20,.08);border:2px solid var(--cg);border-radius:6px;padding:18px 24px;margin-bottom:16px;text-align:center">
+          <div style="font-size:8px;color:rgba(255,255,255,.5);letter-spacing:2px;margin-bottom:6px">WINNER</div>
+          <div style="font-family:var(--font);font-size:clamp(14px,2vw,20px);color:var(--cg);text-shadow:0 0 16px var(--cg)">🏆 ${escapeHtml(winner.name)}</div>
+          <div style="font-size:12px;color:var(--cg);margin-top:8px;font-family:var(--font-mono)">TIME: ${winner.durationStr||'--'}</div>
+        </div>
+      `;
+    } else {
+      const prog = Math.round(winner.progressPercentage || 0);
+      winnerHtml = `
+        <div style="background:rgba(255,136,0,.08);border:2px solid var(--co);border-radius:6px;padding:18px 24px;margin-bottom:16px;text-align:center">
+          <div style="font-size:8px;color:rgba(255,255,255,.5);letter-spacing:2px;margin-bottom:4px">⏰ TIME UP — WINNER BY PROGRESS</div>
+          <div style="font-family:var(--font);font-size:clamp(14px,2vw,20px);color:var(--co);text-shadow:0 0 16px var(--co)">🏆 ${escapeHtml(winner.name)}</div>
+          <div style="font-size:11px;color:var(--co);margin-top:6px">MAZE PROGRESS: ${prog}%</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">CHECKPOINT ${winner.currentCp||0} / 5</div>
+          <div style="font-size:8px;color:rgba(255,255,255,.35);margin-top:6px;letter-spacing:1px">Highest maze progress</div>
+        </div>
+      `;
+    }
+  }
+
+  el.innerHTML = winnerHtml + players.map((p, idx)=>{
     const isSelf=p.id===G.playerId;
     const isFinished=p.status==='FINISHED';
+    const isDNF=p.status==='DNF';
     const rankNum=p.rank||idx+1;
     const col=p.color || '#00f5ff';
+    const prog = Math.round(p.progressPercentage || 0);
 
     let rankStr=`#${rankNum}`;
-    if(rankNum===1 && isFinished) rankStr='🏆 1ST PLACE';
-    else if(rankNum===2 && isFinished) rankStr='🥈 2ND PLACE';
-    else if(rankNum===3 && isFinished) rankStr='🥉 3RD PLACE';
+    if(rankNum===1 && isFinished) rankStr='🏆 1ST';
+    else if(rankNum===2 && isFinished) rankStr='🥈 2ND';
+    else if(rankNum===3 && isFinished) rankStr='🥉 3RD';
+
+    const statusCol = isFinished ? 'var(--cg)' : 'var(--cr)';
+    const rightVal = isFinished
+      ? `<div style="font-size:12px;font-family:var(--font-mono);color:var(--cg);font-weight:bold">${p.durationStr||'--'}</div>`
+      : `<div style="font-size:11px;color:var(--cr);font-weight:bold">DNF</div><div style="font-size:10px;color:var(--co)">${prog}% · CP${p.currentCp||0}/5</div>`;
 
     return `
       <div class="lb-item ${isSelf?'self':''}" style="padding:10px 14px">
-        <div style="font-family:var(--font);color:var(--ck);min-width:90px">${rankStr}</div>
+        <div style="font-family:var(--font);color:var(--ck);min-width:70px;font-size:9px">${rankStr}</div>
         <div class="lb-info">
           <div style="font-size:10px;font-weight:bold">
             <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};box-shadow:0 0 5px ${col};margin-right:4px;vertical-align:middle"></span>
             ${escapeHtml(p.name)} ${isSelf?'(YOU)':''}
           </div>
-          <div class="lb-class">${escapeHtml(p.class)} · Checkpoints: ${p.currentCp||0}/5</div>
+          <div style="font-size:8px;color:rgba(255,255,255,.35);margin-top:2px">CP ${p.currentCp||0}/5</div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:12px;font-family:var(--font-mono);color:${isFinished?'var(--cg)':'var(--cr)'};font-weight:bold">
-            ${isFinished?(p.durationStr||'--'):'DNF'}
-          </div>
-          <div style="font-size:8px;color:rgba(255,255,255,.4)">Score: ${p.score||0}</div>
-        </div>
+        <div style="text-align:right">${rightVal}</div>
       </div>
     `;
   }).join('');
@@ -2191,7 +2332,6 @@ function setupUIEvents(){
   };
 
   const regName=document.getElementById('regName');
-  const regClass=document.getElementById('regClass');
   const regRoom=document.getElementById('regRoom');
   const regErr=document.getElementById('regErr');
   const btnJoinRoom=document.getElementById('btnJoinRoom');
@@ -2201,17 +2341,11 @@ function setupUIEvents(){
     regErr.textContent='';
 
     const name=regName.value.trim();
-    const pClass=regClass.value.trim();
     const roomCode=regRoom.value.trim().toUpperCase();
 
     if(!name){
       regErr.textContent='NAME REQUIRED';
       regName.focus();
-      return;
-    }
-    if(!pClass){
-      regErr.textContent='CLASS REQUIRED';
-      regClass.focus();
       return;
     }
     if(!roomCode){
@@ -2232,7 +2366,6 @@ function setupUIEvents(){
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name,
-          playerClass: pClass,
           roomCode: roomCode,
           token: sessionStorage.getItem('neon_player_token') || null
         })
@@ -2246,8 +2379,14 @@ function setupUIEvents(){
         G.playerId = data.player.id;
         G.playerToken = data.player.token;
         G.playerName = data.player.name;
-        G.playerClass = data.player.class;
         G.roomCode = roomCode;
+
+        if (data.room && data.room.endTime) {
+          G.roomEndTime = data.room.endTime;
+        }
+        if (data.room && data.room.durationSeconds) {
+          G.roomDurationSeconds = data.room.durationSeconds;
+        }
 
         if (data.player.color) {
           G.playerColor = data.player.color;
@@ -2259,13 +2398,12 @@ function setupUIEvents(){
 
         sessionStorage.setItem('neon_player_token', G.playerToken);
         sessionStorage.setItem('neon_player_name', G.playerName);
-        sessionStorage.setItem('neon_player_class', G.playerClass);
         sessionStorage.setItem('neon_room_code', G.roomCode);
 
         // Update Waiting Room Screen
         document.getElementById('waitRoomHeader').textContent = `NEON MAZE · ROOM ${G.roomCode}`;
         document.getElementById('waitPlrName').textContent = G.playerName;
-        document.getElementById('waitPlrClass').textContent = G.playerClass;
+        if(document.getElementById('waitRoomCodeVal')) document.getElementById('waitRoomCodeVal').textContent = G.roomCode;
         document.getElementById('waitPlrCount').textContent = data.room.totalPlayers || 1;
         document.getElementById('lbRoomTag').textContent = `ROOM ${G.roomCode}`;
 
@@ -2301,17 +2439,14 @@ function setupUIEvents(){
   }
 
   btnJoinRoom.onclick = submitJoinRoom;
-  regName.addEventListener('keydown', e => { if (e.key === 'Enter') regClass.focus(); });
-  regClass.addEventListener('keydown', e => { if (e.key === 'Enter') regRoom.focus(); });
+  regName.addEventListener('keydown', e => { if (e.key === 'Enter') regRoom.focus(); });
   regRoom.addEventListener('keydown', e => { if (e.key === 'Enter') submitJoinRoom(); });
 
   // Auto-fill from sessionStorage if previously joined
   const savedName = sessionStorage.getItem('neon_player_name');
-  const savedClass = sessionStorage.getItem('neon_player_class');
   const savedRoom = sessionStorage.getItem('neon_room_code');
   const savedColor = sessionStorage.getItem('neon_player_color');
   if (savedName) regName.value = savedName;
-  if (savedClass) regClass.value = savedClass;
   if (savedRoom) regRoom.value = savedRoom;
   if (savedColor) G.playerColor = savedColor;
 }
