@@ -1032,6 +1032,8 @@
     /* ══════════════════════════════════════════════
        4. ROOM MANAGEMENT DASHBOARD
     ══════════════════════════════════════════════ */
+    let roomDetailInterval = null;
+
     window.openRoomDetail = async (code) => {
       currentViewingRoomCode = code;
       viewRoomsList.style.display = 'none';
@@ -1041,10 +1043,21 @@
       roomCtrlMsg.textContent = '';
 
       await loadRoomDetails(code);
+
+      if (roomDetailInterval) clearInterval(roomDetailInterval);
+      roomDetailInterval = setInterval(() => {
+        if (currentViewingRoomCode) {
+          loadRoomDetails(currentViewingRoomCode);
+        }
+      }, 2000);
     };
 
     btnBackToRooms.onclick = () => {
       currentViewingRoomCode = null;
+      if (roomDetailInterval) {
+        clearInterval(roomDetailInterval);
+        roomDetailInterval = null;
+      }
       stopRoomTimerCountdown();
       viewRoomDetail.style.display = 'none';
       viewRoomsList.style.display = 'block';

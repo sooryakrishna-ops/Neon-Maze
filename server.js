@@ -715,11 +715,13 @@ class RoomManager {
     this.roomsByCode = new Map(); // roomCode (uppercase) -> CompetitionRoom
   }
 
-  createRoom(durationSeconds = 300) {
-    let code;
-    do {
-      code = generateRoomCode();
-    } while (this.roomsByCode.has(code));
+  createRoom(durationSeconds = 300, customCode = null) {
+    let code = customCode ? customCode.toUpperCase().trim() : null;
+    if (!code || this.roomsByCode.has(code)) {
+      do {
+        code = generateRoomCode();
+      } while (this.roomsByCode.has(code));
+    }
 
     const seed = Math.floor(100000 + Math.random() * 900000);
     const room = new CompetitionRoom(code, seed, durationSeconds);
@@ -797,11 +799,11 @@ app.get('/api/admin/rooms', (req, res) => {
   });
 });
 
-// Admin Create Room — accepts optional durationSeconds in body
+// Admin Create Room — accepts optional durationSeconds and code in body
 app.post('/api/admin/rooms/create', (req, res) => {
-  const { durationSeconds } = req.body || {};
+  const { durationSeconds, code } = req.body || {};
   const dur = parseInt(durationSeconds, 10) || 300;
-  const room = roomManager.createRoom(dur);
+  const room = roomManager.createRoom(dur, code);
   res.json({
     success: true,
     room: room.getSummary(),
