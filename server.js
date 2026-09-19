@@ -1059,6 +1059,78 @@ wss.on('connection', (ws) => {
         return;
       }
 
+      // 2b. Admin Create Room via WebSocket (for serverless compatibility)
+      if (data.type === 'ADMIN_CREATE_ROOM') {
+        if (!ws.isAdmin) {
+          ws.send(JSON.stringify({ type: 'ERROR', error: 'NOT AUTHORIZED' }));
+          return;
+        }
+        const dur = parseInt(data.durationSeconds, 10) || 300;
+        const room = roomManager.createRoom(dur, data.code || null);
+        ws.send(JSON.stringify({
+          type: 'ADMIN_ROOM_CREATED',
+          success: true,
+          room: room.getSummary(),
+          maze: room.maze,
+          message: `ROOM ${room.code} CREATED SUCCESSFULLY`,
+        }));
+        return;
+      }
+
+      // 2c. Admin Start Room via WebSocket (for serverless compatibility)
+      if (data.type === 'ADMIN_START_ROOM') {
+        if (!ws.isAdmin) {
+          ws.send(JSON.stringify({ type: 'ERROR', error: 'NOT AUTHORIZED' }));
+          return;
+        }
+        const cleanCode = (data.roomCode || '').toUpperCase().trim();
+        const room = roomManager.getRoomByCode(cleanCode);
+        if (!room) {
+          ws.send(JSON.stringify({ type: 'ADMIN_START_RESULT', success: false, error: 'ROOM NOT FOUND' }));
+          return;
+        }
+        const result = room.startCountdown(3800);
+        if (!result.success) {
+          ws.send(JSON.stringify({ type: 'ADMIN_START_RESULT', success: false, error: result.error }));
+          return;
+        }
+        // Setup countdown completion
+        if (room.countdownTimer) clearTimeout(room.countdownTimer);
+        room.countdownTimer = setTimeout(() => {
+          if (room.status === 'READY') {
+            room.startCompetitionNow();
+            broadcastToRoom(room.code, {
+              type: 'ROOM_COMPETITION_STARTED',
+              roomCode: room.code,
+              startTime: room.startTime,
+              endTime: room.endTime,
+              durationSeconds: room.durationSeconds,
+              serverTime: Date.now(),
+            });
+            broadcastRoomLeaderboard(room);
+          }
+        }, 3800);
+        // Broadcast countdown
+        broadcastToRoom(room.code, {
+          type: 'ROOM_START_COUNTDOWN',
+          roomCode: room.code,
+          roomStartTime: result.roomStartTime,
+          roomEndTime: result.roomEndTime,
+          durationSeconds: room.durationSeconds,
+          serverTime: Date.now(),
+          leaderboard: room.getLeaderboardData(),
+        });
+        ws.send(JSON.stringify({
+          type: 'ADMIN_START_RESULT',
+          success: true,
+          roomCode: room.code,
+          roomStartTime: result.roomStartTime,
+          roomEndTime: result.roomEndTime,
+        }));
+        return;
+      }
+
+
       // 3. Player Subscribe to Room
       if (data.type === 'SUBSCRIBE_ROOM') {
         const cleanCode = (data.roomCode || '').toUpperCase().trim();
