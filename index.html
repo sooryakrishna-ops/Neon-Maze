@@ -2360,81 +2360,106 @@ function setupUIEvents(){
 
     Aud.init();Aud.play('click');
 
-    try {
-      const res = await fetch(`${API_BASE}/api/rooms/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name,
-          roomCode: roomCode,
-          token: sessionStorage.getItem('neon_player_token') || null
-        })
-      });
+    // Retry logic for Vercel serverless (max 15 retries)
+    let retries = 15;
+    let data;
+    let res;
 
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        btnJoinRoom.textContent = 'JOINED!';
-
-        G.playerId = data.player.id;
-        G.playerToken = data.player.token;
-        G.playerName = data.player.name;
-        G.roomCode = roomCode;
-
-        if (data.room && data.room.endTime) {
-          G.roomEndTime = data.room.endTime;
-        }
-        if (data.room && data.room.durationSeconds) {
-          G.roomDurationSeconds = data.room.durationSeconds;
-        }
-
-        if (data.player.color) {
-          G.playerColor = data.player.color;
-          sessionStorage.setItem('neon_player_color', G.playerColor);
-        }
-        if (data.maze) {
-          G.roomMaze = data.maze;
-        }
-
-        sessionStorage.setItem('neon_player_token', G.playerToken);
-        sessionStorage.setItem('neon_player_name', G.playerName);
-        sessionStorage.setItem('neon_room_code', G.roomCode);
-
-        // Update Waiting Room Screen
-        document.getElementById('waitRoomHeader').textContent = `NEON MAZE · ROOM ${G.roomCode}`;
-        document.getElementById('waitPlrName').textContent = G.playerName;
-        if(document.getElementById('waitRoomCodeVal')) document.getElementById('waitRoomCodeVal').textContent = G.roomCode;
-        document.getElementById('waitPlrCount').textContent = data.room.totalPlayers || 1;
-        document.getElementById('lbRoomTag').textContent = `ROOM ${G.roomCode}`;
-
-        if (data.leaderboard) {
-          renderWaitingRoster(data.leaderboard);
-          renderLiveLeaderboard(data.leaderboard);
-        }
-
-        // Subscribe WebSocket to room
-        sendWS({
-          type: 'SUBSCRIBE_ROOM',
-          roomCode: G.roomCode,
-          playerToken: G.playerToken
+    for (let i = 0; i < retries; i++) {
+      try {
+        res = await fetch(`${API_BASE}/api/rooms/join`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            roomCode: roomCode,
+            token: sessionStorage.getItem('neon_player_token') || null
+          })
         });
 
-        setTimeout(() => {
-          btnJoinRoom.disabled = false;
-          btnJoinRoom.textContent = 'JOIN ROOM';
-          showScr('swait');
-        }, 350);
+        data = await res.json();
 
-      } else {
+        if (res.ok && data.success) {
+          break; // Success, exit retry loop
+        } else {
+          // If room not found, it might be on another serverless instance. Wait and retry.
+          if (data.error && data.error.includes('ROOM NOT FOUND') && i < retries - 1) {
+            btnJoinRoom.textContent = `JOINING... (${i+1})`;
+            await new Promise(r => setTimeout(r, 600));
+            continue;
+          }
+          break; // Other error, exit retry loop
+        }
+      } catch (err) {
+        if (i < retries - 1) {
+          btnJoinRoom.textContent = `JOINING... (${i+1})`;
+          await new Promise(r => setTimeout(r, 600));
+          continue;
+        }
+        console.error('Join room error:', err);
         btnJoinRoom.disabled = false;
         btnJoinRoom.textContent = 'JOIN ROOM';
-        regErr.textContent = data.error || 'UNABLE TO JOIN ROOM';
+        regErr.textContent = 'SERVER CONNECTION FAILED — ENSURE BACKEND IS RUNNING';
+        return;
       }
-    } catch (err) {
-      console.error('Join room error:', err);
+    }
+
+    if (res && res.ok && data && data.success) {
+      btnJoinRoom.textContent = 'JOINED!';
+
+      G.playerId = data.player.id;
+      G.playerToken = data.player.token;
+      G.playerName = data.player.name;
+      G.roomCode = roomCode;
+
+      if (data.room && data.room.endTime) {
+        G.roomEndTime = data.room.endTime;
+      }
+      if (data.room && data.room.durationSeconds) {
+        G.roomDurationSeconds = data.room.durationSeconds;
+      }
+
+      if (data.player.color) {
+        G.playerColor = data.player.color;
+        sessionStorage.setItem('neon_player_color', G.playerColor);
+      }
+      if (data.maze) {
+        G.roomMaze = data.maze;
+      }
+
+      sessionStorage.setItem('neon_player_token', G.playerToken);
+      sessionStorage.setItem('neon_player_name', G.playerName);
+      sessionStorage.setItem('neon_room_code', G.roomCode);
+
+      // Update Waiting Room Screen
+      document.getElementById('waitRoomHeader').textContent = `NEON MAZE · ROOM ${G.roomCode}`;
+      document.getElementById('waitPlrName').textContent = G.playerName;
+      if(document.getElementById('waitRoomCodeVal')) document.getElementById('waitRoomCodeVal').textContent = G.roomCode;
+      document.getElementById('waitPlrCount').textContent = data.room.totalPlayers || 1;
+      document.getElementById('lbRoomTag').textContent = `ROOM ${G.roomCode}`;
+
+      if (data.leaderboard) {
+        renderWaitingRoster(data.leaderboard);
+        renderLiveLeaderboard(data.leaderboard);
+      }
+
+      // Subscribe WebSocket to room
+      sendWS({
+        type: 'SUBSCRIBE_ROOM',
+        roomCode: G.roomCode,
+        playerToken: G.playerToken
+      });
+
+      setTimeout(() => {
+        btnJoinRoom.disabled = false;
+        btnJoinRoom.textContent = 'JOIN ROOM';
+        showScr('swait');
+      }, 350);
+
+    } else {
       btnJoinRoom.disabled = false;
       btnJoinRoom.textContent = 'JOIN ROOM';
-      regErr.textContent = 'SERVER CONNECTION FAILED — ENSURE BACKEND IS RUNNING';
+      regErr.textContent = data ? (data.error || 'UNABLE TO JOIN ROOM') : 'UNABLE TO JOIN ROOM';
     }
   }
 
